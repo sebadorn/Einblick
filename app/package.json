@@ -1,0 +1,12 @@
+{
+	"description": "",
+	"main": "main.js",
+	"maintainers": [
+		{
+			"name": "Sebastian Dorn",
+			"web": "https://sebadorn.de"
+		}
+	],
+	"name": "pdf_viewer",
+	"version": "0.1.0"
+}

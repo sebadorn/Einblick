@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Einblick</title>
+	<link rel="stylesheet" href="style.css" />
+	<script>
+		window.addEventListener( 'load', function() {
+			// process.on( 'uncaughtException', function( err ) {
+			// 	Log.error( err );
+			// 	alert( 'An unexpected error occured. Please check the log file for details.' );
+
+			// 	// TODO: uncomment
+			// 	// var electron = require( 'electron' );
+			// 	// electron.remote.getCurrentWindow().close();
+			// } );
+
+			var scripts = [
+				'js/pdf.js',
+				'js/compatibility.js'
+			];
+
+			var loadScript = function( index ) {
+				if( index >= scripts.length ) {
+					var canvas = document.getElementById( 'pdf' );
+
+					PDFJS.workerSrc = 'js/pdf.worker.js';
+					PDFJS.getDocument( '../test.pdf' ).then( function( pdf ) {
+						pdf.getPage( 1 ).then( function( page ) {
+							var viewport = page.getViewport( 1.0 );
+							canvas.width = viewport.width;
+							canvas.height = viewport.height;
+							var ctx = canvas.getContext( '2d' );
+							var renderContext = {
+								canvasContext: ctx,
+								viewport: viewport
+							};
+							page.render( renderContext );
+						} );
+					} );
+
+					return;
+				}
+
+				var script = document.createElement( 'script' );
+				script.onload = function() {
+					loadScript( index + 1 );
+				};
+				script.src = scripts[index];
+
+				document.head.appendChild( script );
+			};
+
+			loadScript( 0 );
+		} );
+	</script>
+</head>
+<body>
+
+<div class="canvas-wrap">
+	<canvas id="pdf"></canvas>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,5 @@
+electron
+pdf.js
+
+*.sublime-*
+*.pdf
