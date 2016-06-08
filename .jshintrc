@@ -1,0 +1,12 @@
+{
+	"browser": true,
+	"esnext": true,
+	"expr": true,
+	"jquery": true,
+	"globals": {
+		"PDFJS": false,
+		"Einblick": true
+	},
+	"node": true,
+	"shadow": true
+}

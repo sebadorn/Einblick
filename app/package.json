@@ -1,5 +1,5 @@
 {
-	"description": "",
+	"description": "A PDF viewer based on electron and Mozilla's PDF.js.",
 	"main": "main.js",
 	"maintainers": [
 		{
@@ -7,6 +7,10 @@
 			"web": "https://sebadorn.de"
 		}
 	],
-	"name": "pdf_viewer",
+	"name": "Einblick",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/sebadorn/Einblick.git"
+	},
 	"version": "0.1.0"
 }
