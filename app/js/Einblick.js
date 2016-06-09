@@ -5,6 +5,7 @@ var Einblick = {
 
 
 	_doc: null,
+	_docMeta: null,
 	_page: null,
 
 	_scripts: [
@@ -70,6 +71,15 @@ var Einblick = {
 
 			PDFJS.getDocument( p ).then( function( pdf ) {
 				Einblick._doc = pdf;
+
+				pdf.getMetadata().then( function( meta ) {
+					Einblick._docMeta = meta;
+
+					if( meta && meta.info ) {
+						$( 'title' ).text( meta.info.Title );
+					}
+				} );
+
 				Einblick.showPage( 1 );
 			} );
 
