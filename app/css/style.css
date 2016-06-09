@@ -48,29 +48,67 @@ body {
 button,
 input,
 textarea {
+	background-color: #202020;
 	border: 0;
 	color: #F0F0F0;
 	font: 12px "Open Sans", sans-serif;
 }
 
+input[type="text"],
+input[type="password"] {
+	padding: 2px;
+}
+
 button {
-	background-color: #202020;
 	border-radius: 4px;
 	cursor: pointer;
 	padding: 10px;
 }
 
 button:hover {
-	background-color: #F0F0F0;
-	color: #202020;
+	color: #5D99E4;
 }
 
+
 header {
+	align-items: center;
 	background-color: #2D2D2D;
+	display: flex;
 	flex-grow: 0;
 	flex-shrink: 0;
+	justify-content: space-between;
 	padding: 5px 10px;
 }
+
+	header .page {
+		white-space: nowrap;
+	}
+
+		#page-prev {
+			padding: 6px;
+			padding-right: 8px;
+		}
+
+		#page-next {
+			padding: 6px;
+			padding-left: 8px;
+		}
+
+		.page .index {
+			text-align: right;
+			width: 30px;
+		}
+
+		.page .pages::before {
+			content: "/";
+			padding: 0 2px;
+		}
+
+	.zoom {
+		text-align: right;
+		width: 50px;
+	}
+
 
 .canvas-wrap {
 	flex-grow: 2;
@@ -79,6 +117,7 @@ header {
 	padding: 20px 0;
 	text-align: center;
 }
+
 
 footer {
 	background-color: #2D2D2D;

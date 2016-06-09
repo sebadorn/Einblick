@@ -9,8 +9,6 @@
 	<script src="js/pdf.js"></script>
 	<script src="js/compatibility.js"></script>
 	<script src="js/Einblick.js"></script>
-</head>
-<body>
 	<script>
 		window.$ = window.jQuery = require( __dirname + '/js/jquery.min.js' );
 
@@ -18,8 +16,26 @@
 			Einblick.init();
 		} );
 	</script>
+</head>
+<body>
 <header id="topbar">
-	<button id="open-file" class="fa fa-folder-open"></button>
+	<div class="tools">
+		<button id="open-settings" class="fa fa-cogs"></button>
+		<button id="open-file" class="fa fa-folder-open"></button>
+	</div>
+
+	<div class="page">
+		<button id="page-prev" class="fa fa-chevron-left"></button>
+
+		<input type="text" class="index" />
+		<span class="pages"></span>
+
+		<button id="page-next" class="fa fa-chevron-right"></button>
+	</div>
+
+	<div class="layout-and-zoom">
+		<input type="text" class="zoom" value="100%" />
+	</div>
 </header>
 
 <section class="canvas-wrap">
@@ -27,7 +43,9 @@
 	<canvas id="pdf"></canvas>
 </section>
 
-<footer id="statusbar">100%</footer>
+<footer id="statusbar">
+	<span class="filesize"></span>
+</footer>
 
 </body>
 </html>
