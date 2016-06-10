@@ -7,6 +7,7 @@ var Einblick = {
 	_doc: null,
 	_docMeta: null,
 	_page: null,
+	_texts: null,
 
 	_scripts: [
 		'UI.js'
@@ -41,16 +42,36 @@ var Einblick = {
 
 
 	/**
+	 * Adjust the zoom so the current
+	 * page fits to the window width.
+	 */
+	fitToWidth: function() {
+		if( !Einblick._page ) {
+			console.error( '[Einblick.fitToWidth] No page set.' );
+			return;
+		}
+
+		var pw = Einblick._page.pageInfo.view[2];
+		var areaWidth = $( '.canvas-wrap' ).width() - 16;
+		var zoom = Math.round( areaWidth / pw * 100 ) / 100;
+
+		Einblick.setZoom( zoom );
+	},
+
+
+	/**
 	 * Initialize the application.
 	 * @param {Function} cb Callback when done.
 	 */
 	init: function( cb ) {
 		this._loadScripts( function() {
-			Einblick.UI.init( function() {
-				PDFJS.workerSrc = 'js/pdf.worker.js';
-				Einblick.loadFile( __dirname + '/../test.pdf' );
+			Einblick.loadLanguage( function() {
+				Einblick.UI.init( function() {
+					PDFJS.workerSrc = 'js/pdf.worker.js';
+					Einblick.loadFile( __dirname + '/../test.pdf' );
 
-				cb && cb();
+					cb && cb();
+				} );
 			} );
 		} );
 	},
@@ -91,6 +112,44 @@ var Einblick = {
 
 
 	/**
+	 * Load the language.
+	 * @param {Function} cb Callback.
+	 */
+	loadLanguage: function( cb ) {
+		var lang = localStorage.getItem( 'einblick.language' );
+
+		if( !lang ) {
+			lang = window.navigator.language;
+		}
+
+		lang = lang.substr( 0, 2 );
+		var file = __dirname + '/lang/' + lang + '.json';
+
+		var fs = require( 'fs' );
+		fs.readFile( file, function( err, content ) {
+			if( err ) {
+				console.error( err );
+				cb && cb( err );
+				return;
+			}
+
+			var translations = {};
+
+			try {
+				translations = JSON.parse( String( content ) );
+			}
+			catch( err ) {
+				console.error( err );
+			}
+
+			Einblick._texts = translations;
+
+			cb && cb();
+		} );
+	},
+
+
+	/**
 	 * Show the next page.
 	 */
 	pageNext: function() {
@@ -121,6 +180,34 @@ var Einblick = {
 
 
 	/**
+	 * Set the zoom.
+	 * @param {Number} zoom Zoom. 1.0 => 100%.
+	 */
+	setZoom: function( zoom ) {
+		if( !Einblick._page ) {
+			console.error( '[Einblick.setZoom] Page no set.' );
+			return;
+		}
+
+		var page = Einblick._page;
+
+		var vp = page.getViewport( zoom );
+		var c = Einblick.UI.canvas;
+		c.width = vp.width;
+		c.height = vp.height;
+
+		Einblick.UI.update( {
+			zoom: zoom
+		} );
+
+		page.render( {
+			canvasContext: c.getContext( '2d' ),
+			viewport: vp
+		} );
+	},
+
+
+	/**
 	 * Show a certain page.
 	 * @param {Number}   index Page number. Starts at 1.
 	 * @param {Function} cb    Callback.
@@ -136,27 +223,25 @@ var Einblick = {
 
 		this._doc.getPage( index ).then( function( page ) {
 			Einblick._page = page;
-
-			var viewport = page.getViewport( 1.0 );
-			var c = Einblick.UI.canvas;
-			c.width = viewport.width;
-			c.height = viewport.height;
-
-			var renderContext = {
-				canvasContext: c.getContext( '2d' ),
-				viewport: viewport
-			};
+			Einblick.setZoom( 1.0 );
 
 			Einblick.UI.update( {
 				index: index,
-				numPages: Einblick._doc.numPages,
-				zoom: 1.0
+				numPages: Einblick._doc.numPages
 			} );
-
-			page.render( renderContext );
 
 			cb && cb();
 		} );
+	},
+
+
+	/**
+	 * Get the text/translation for the given key.
+	 * @param  {String} key Key to translate.
+	 * @return {String}     Translation.
+	 */
+	t: function( key ) {
+		return Einblick._texts[key] || key;
 	}
 
 

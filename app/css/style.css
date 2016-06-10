@@ -5,6 +5,11 @@
 	-webkit-user-select: none;
 }
 
+::selection {
+	background-color: #3892E0;
+	color: #FFFFFF;
+}
+
 ::-webkit-scrollbar {
 	background-color: transparent;
 }
@@ -85,13 +90,11 @@ header {
 	}
 
 		#page-prev {
-			padding: 6px;
-			padding-right: 8px;
+			padding: 5px 8px 5px 7px;
 		}
 
 		#page-next {
-			padding: 6px;
-			padding-left: 8px;
+			padding: 5px 7px 5px 8px;
 		}
 
 		.page .index {
@@ -102,6 +105,40 @@ header {
 		.page .pages::before {
 			content: "/";
 			padding: 0 2px;
+		}
+
+	#select-zoom {
+		border-bottom-right-radius: 0;
+		border-top-right-radius: 0;
+		margin-right: -3px;
+		padding: 4px 5px 5px;
+		position: relative;
+		top: -1px;
+	}
+
+	.zoom-options {
+		background-color: #202020;
+		border-radius: 4px;
+		color: #F0F0F0;
+		display: none;
+		list-style: none;
+		overflow: hidden;
+		position: absolute;
+		right: 18px;
+		top: 48px;
+	}
+
+		.zoom-options li {
+			padding: 5px 10px;
+		}
+
+		.zoom-options li:hover {
+			background-color: #5D99E4;
+		}
+
+		.zoom-options .sep {
+			border-bottom: 1px solid #2D2D2D;
+			padding: 0;
 		}
 
 	.zoom {
