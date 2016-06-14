@@ -4,7 +4,7 @@
 Einblick.UI = {
 
 
-	canvas: null,
+	canvases: [],
 
 
 	/**
@@ -230,12 +230,29 @@ Einblick.UI = {
 	 * @param {Function} cb Callback when done.
 	 */
 	init: function( cb ) {
-		this.canvas = document.getElementById( 'pdf' );
-
 		this._initHeader();
 		this._initDragAndDrop();
 
 		$( 'body' ).click( this._closeAll );
+
+		cb && cb();
+	},
+
+
+	/**
+	 * Initialize the canvases for the pages.
+	 */
+	initPages: function( cb ) {
+		var $cWrap = $( '.canvas-wrap' );
+		this.canvases = [];
+
+		for( var i = 0; i < Einblick.doc.numPages; i++ ) {
+			var $canvas = $( '<canvas></canvas>' );
+			$canvas.attr( 'id', 'pdf-page-' + i );
+
+			$cWrap.append( $canvas );
+			this.canvases.push( $canvas[0] );
+		}
 
 		cb && cb();
 	},
