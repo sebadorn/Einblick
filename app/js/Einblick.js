@@ -4,9 +4,10 @@
 var Einblick = {
 
 
+	currentPageIndex: null,
 	doc: null,
 	docMeta: null,
-	page: null,
+	pages: {},
 
 	_scripts: [
 		'UI.js'
@@ -46,16 +47,19 @@ var Einblick = {
 	 * page fits to the window width.
 	 */
 	fitToWidth: function() {
-		if( !Einblick.page ) {
+		var page = Einblick.pages[Einblick.currentPageIndex];
+
+		if( !page ) {
 			console.error( '[Einblick.fitToWidth] No page set.' );
 			return;
 		}
 
-		var pw = Einblick.page.pageInfo.view[2];
+		var pw = page.pageInfo.view[2];
 		var areaWidth = $( '.canvas-wrap' ).width() - 16;
 		var zoom = Math.round( areaWidth / pw * 100 ) / 100;
 
-		Einblick.setZoom( zoom );
+		Einblick.setZoomAll( zoom );
+		Einblick.UI.update( { zoom: zoom } );
 	},
 
 
@@ -102,6 +106,9 @@ var Einblick = {
 				} );
 
 				Einblick.UI.initPages( function() {
+					Einblick.UI.update( {
+						numPages: pdf.numPages
+					} );
 					Einblick.showPage( 1 );
 				} );
 			} );
@@ -183,37 +190,77 @@ var Einblick = {
 
 	/**
 	 * Set the zoom.
-	 * @param {Number} zoom Zoom. 1.0 => 100%.
+	 * @param  {Number} zoom      Zoom. 1.0 => 100%.
+	 * @param  {Number} pageIndex The page index.
+	 * @return {Object}           Viewport.
 	 */
-	setZoom: function( zoom ) {
-		if( !Einblick.page ) {
-			console.error( '[Einblick.setZoom] Page no set.' );
+	setZoom: function( zoom, pageIndex ) {
+		if( !pageIndex ) {
+			pageIndex = Einblick.currentPageIndex;
+		}
+
+		if( !Einblick.pages[pageIndex] ) {
+			console.error( '[Einblick.setZoom] Page not set.' );
 			return;
 		}
 
-		var page = Einblick.page;
+		var page = Einblick.pages[pageIndex];
 		var vp = page.getViewport( zoom );
-		var canvases = Einblick.UI.canvases;
+		var cData = Einblick.UI.canvases[pageIndex];
 
-		for( var i = 0; i < canvases.length; i++ ) {
-			var c = canvases[i];
+		if( !cData ) {
+			console.error( '[Einblick.setZoom] No canvas for page.' );
+			return;
+		}
 
-			c.width = vp.width;
-			c.height = vp.height;
+		var c = cData.canvas;
 
-			if( i >= 7 ) {
+		c.width = vp.width;
+		c.height = vp.height;
+		c.style.width = c.width + 'px';
+		c.style.height = c.height + 'px';
+
+		page.render( {
+			canvasContext: c.getContext( '2d' ),
+			viewport: vp
+		} );
+
+		cData.loaded = true;
+
+		return vp;
+	},
+
+
+	/**
+	 * Update the zoom for all pages.
+	 * @param {Number} zoom New zoom value.
+	 */
+	setZoomAll: function( zoom ) {
+		for( var index in Einblick.pages ) {
+			var cData = Einblick.UI.canvases[index];
+
+			if( !cData ) {
 				continue;
 			}
+
+			var page = Einblick.pages[index];
+
+			if( !page ) {
+				continue;
+			}
+
+			var vp = page.getViewport( zoom );
+			var c = cData.canvas;
+			c.width = vp.width;
+			c.height = vp.height;
+			c.style.width = c.width + 'px';
+			c.style.height = c.height + 'px';
 
 			page.render( {
 				canvasContext: c.getContext( '2d' ),
 				viewport: vp
 			} );
 		}
-
-		Einblick.UI.update( {
-			zoom: zoom
-		} );
 	},
 
 
@@ -231,17 +278,41 @@ var Einblick = {
 		// Clamp the page index.
 		index = Math.max( 1, Math.min( this.doc.numPages, index ) );
 
+		// Requested page.
 		this.doc.getPage( index ).then( function( page ) {
-			Einblick.page = page;
-			Einblick.setZoom( 1.0 );
+			var index = page.pageIndex + 1;
+			Einblick.pages[index] = page;
+			Einblick.currentPageIndex = index;
 
-			Einblick.UI.update( {
-				index: index,
-				numPages: Einblick.doc.numPages
-			} );
+			var viewport = Einblick.setZoom( 1.0, index );
+
+			if( viewport ) {
+				Einblick.UI.update( {
+					index: index,
+					pageHeight: viewport.height,
+					pageWidth: viewport.width,
+					zoom: 1.0
+				} );
+			}
 
 			cb && cb();
 		} );
+
+
+		// Preload some of the next pages.
+		for( var i = 1; i <= 5; i++ ) {
+			var indexNext = index + i;
+
+			if( indexNext > this.doc.numPages ) {
+				break;
+			}
+
+			this.doc.getPage( indexNext ).then( function( page ) {
+				var indexNext = page.pageIndex + 1;
+				Einblick.pages[indexNext] = page;
+				Einblick.setZoom( 1.0, indexNext );
+			} );
+		}
 	},
 
 

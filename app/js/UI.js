@@ -4,7 +4,7 @@
 Einblick.UI = {
 
 
-	canvases: [],
+	canvases: {},
 
 
 	/**
@@ -88,7 +88,8 @@ Einblick.UI = {
 		}
 
 		zoom /= 100;
-		Einblick.setZoom( zoom );
+		Einblick.setZoomAll( zoom );
+		Einblick.UI.update( { zoom: zoom } );
 	},
 
 
@@ -103,7 +104,8 @@ Einblick.UI = {
 		$( '#topbar .zoom-options' ).hide();
 
 		if( !isNaN( data ) ) {
-			Einblick.setZoom( data );
+			Einblick.setZoomAll( data );
+			Einblick.UI.update( { zoom: data } );
 			return;
 		}
 
@@ -241,17 +243,22 @@ Einblick.UI = {
 
 	/**
 	 * Initialize the canvases for the pages.
+	 * @param {Function} cb Callback.
 	 */
 	initPages: function( cb ) {
 		var $cWrap = $( '.canvas-wrap' );
-		this.canvases = [];
+		this.canvases = {};
 
-		for( var i = 0; i < Einblick.doc.numPages; i++ ) {
+		for( var i = 1; i <= Einblick.doc.numPages; i++ ) {
 			var $canvas = $( '<canvas></canvas>' );
 			$canvas.attr( 'id', 'pdf-page-' + i );
 
 			$cWrap.append( $canvas );
-			this.canvases.push( $canvas[0] );
+
+			this.canvases[i] = {
+				canvas: $canvas[0],
+				loaded: false
+			};
 		}
 
 		cb && cb();
@@ -274,6 +281,36 @@ Einblick.UI = {
 
 		if( typeof data.numPages === 'number' ) {
 			$( '#topbar .pages' ).text( data.numPages );
+		}
+
+		if(
+			typeof data.pageWidth === 'number' ||
+			typeof data.pageHeight === 'number'
+		) {
+			var h = data.pageHeight;
+			var w = data.pageWidth;
+
+			if( typeof h === 'undefined' ) {
+				h = 'auto';
+			}
+			else {
+				h += 'px';
+			}
+
+			if( typeof w === 'undefined' ) {
+				w = 'auto';
+			}
+			else {
+				w += 'px';
+			}
+
+			var $style = $( 'style#dynamic-style' );
+			$style.text( [
+				'.canvas-wrap canvas {',
+					'height: ' + h + ';',
+					'width: ' + w + ';',
+				'}'
+			].join( '' ) );
 		}
 
 		if( typeof data.filesize === 'number' ) {
