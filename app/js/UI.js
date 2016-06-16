@@ -6,6 +6,8 @@ Einblick.UI = {
 
 	canvases: {},
 
+	_timeoutLoadPage: 0,
+
 
 	/**
 	 * Handle a general click event and
@@ -59,6 +61,24 @@ Einblick.UI = {
 			$input.select();
 			$input.focus();
 		} );
+	},
+
+
+	/**
+	 * Handle the scroll event on the pages container.
+	 * @param {ScrollEvent} ev
+	 */
+	_handlePageScroll: function( ev ) {
+		clearTimeout( this._timeoutLoadPage );
+
+		this._timeoutLoadPage = setTimeout( function() {
+			var scrollTop = ev.delegateTarget.scrollTop;
+			var pageHeight = $( '#pdf-page-1' ).height();
+			var segment = pageHeight + 4;
+			var pageIndex = ~~( scrollTop / segment ) + 1;
+
+			Einblick.showPage( pageIndex );
+		}, 50 );
 	},
 
 
@@ -228,14 +248,50 @@ Einblick.UI = {
 
 
 	/**
+	 * Format a given size.
+	 * @param  {Number} size Size to format, starting at bytes unit.
+	 * @return {Object}      Size < 1024 with corresponding unit.
+	 */
+	formatSize: function( size ) {
+		var unit = 'B';
+
+		if( size >= 1000 ) {
+			size /= 1000;
+			unit = 'KB';
+		}
+
+		if( size >= 1000 ) {
+			size /= 1000;
+			unit = 'MB';
+		}
+
+		if( size >= 1000 ) {
+			size /= 1000;
+			unit = 'GB';
+		}
+
+		if( size >= 1000 ) {
+			size /= 1000;
+			unit = 'TB';
+		}
+
+		return {
+			size: size,
+			unit: unit
+		};
+	},
+
+
+	/**
 	 * Initialize the UI.
 	 * @param {Function} cb Callback when done.
 	 */
 	init: function( cb ) {
 		this._initHeader();
 		this._initDragAndDrop();
+		$( '.canvas-wrap' ).scroll( this._handlePageScroll.bind( this ) );
 
-		$( 'body' ).click( this._closeAll );
+		$( 'body' ).click( this._closeAll.bind( this ) );
 
 		cb && cb();
 	},
@@ -314,32 +370,19 @@ Einblick.UI = {
 		}
 
 		if( typeof data.filesize === 'number' ) {
-			var s = data.filesize;
-			var unit = 'B';
-
-			if( s >= 1000 ) {
-				s /= 1000;
-				unit = 'KB';
-			}
-
-			if( s >= 1000 ) {
-				s /= 1000;
-				unit = 'MB';
-			}
-
-			if( s >= 1000 ) {
-				s /= 1000;
-				unit = 'GB';
-			}
-
-			if( s >= 1000 ) {
-				s /= 1000;
-				unit = 'TB';
-			}
-
+			var formatted = Einblick.UI.formatSize( data.filesize );
+			var s = formatted.size;
 			s = Math.round( s * 100 ) / 100;
 
-			$( '#statusbar .filesize' ).html( s + '&thinsp;' + unit );
+			$( '#statusbar .filesize .val' ).html( s + '&thinsp;' + formatted.unit );
+		}
+
+		if( typeof data.memory === 'number' ) {
+			var formatted = Einblick.UI.formatSize( data.memory );
+			var s = formatted.size;
+			s = Math.round( s * 100 ) / 100;
+
+			$( '#statusbar .memory .val' ).html( s + '&thinsp;' + formatted.unit );
 		}
 	}
 

@@ -182,3 +182,16 @@ footer {
 	flex-shrink: 0;
 	padding: 4px;
 }
+
+	footer span {
+		display: inline-block;
+	}
+
+	footer .data {
+		margin-left: 6px;
+	}
+
+	footer .fa {
+		font-size: 14px;
+		margin-right: 1px;
+	}
