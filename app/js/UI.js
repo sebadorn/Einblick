@@ -248,6 +248,24 @@ Einblick.UI = {
 
 
 	/**
+	 * Clear the UI of the old document
+	 * to prepare for a new one.
+	 */
+	clear: function() {
+		$( 'title' ).text( '' );
+		clearTimeout( Einblick.UI._timeoutLoadPage );
+		Einblick.UI.canvases = {};
+		$( '.canvas-wrap' ).html( '' );
+
+		Einblick.UI.update( {
+			filesize: 0,
+			index: 0,
+			numPages: 0
+		} );
+	},
+
+
+	/**
 	 * Format a given size.
 	 * @param  {Number} size Size to format, starting at bytes unit.
 	 * @return {Object}      Size < 1024 with corresponding unit.

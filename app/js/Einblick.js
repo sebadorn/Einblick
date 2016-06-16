@@ -44,6 +44,19 @@ var Einblick = {
 
 
 	/**
+	 * Clear the old document to
+	 * prepare for a new one.
+	 */
+	clear: function() {
+		Einblick.UI.clear();
+		this.currentPageIndex = null;
+		this.doc = null;
+		this.docMeta = null;
+		this.pages = {};
+	},
+
+
+	/**
 	 * Adjust the zoom so the current
 	 * page fits to the window width.
 	 */
@@ -101,6 +114,8 @@ var Einblick = {
 				console.error( err );
 				return;
 			}
+
+			Einblick.clear();
 
 			PDFJS.getDocument( p ).then( function( pdf ) {
 				Einblick.doc = pdf;
