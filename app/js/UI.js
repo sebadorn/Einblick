@@ -5,6 +5,7 @@ Einblick.UI = {
 
 
 	canvases: {},
+	zoom: 1.0,
 
 	_timeoutLoadPage: 0,
 
@@ -61,6 +62,7 @@ Einblick.UI = {
 			$input.select();
 			$input.focus();
 		} );
+		Einblick.UI.scrollToPage( index );
 	},
 
 
@@ -77,7 +79,9 @@ Einblick.UI = {
 			var segment = pageHeight + 4;
 			var pageIndex = ~~( scrollTop / segment ) + 1;
 
+			Einblick.currentPageIndex = pageIndex;
 			Einblick.showPage( pageIndex );
+			Einblick.UI.update( { index: pageIndex } );
 		}, 50 );
 	},
 
@@ -108,8 +112,10 @@ Einblick.UI = {
 		}
 
 		zoom /= 100;
+		Einblick.UI.zoom = zoom;
 		Einblick.setZoomAll( zoom );
 		Einblick.UI.update( { zoom: zoom } );
+		Einblick.UI.scrollToPage( Einblick.currentPageIndex );
 	},
 
 
@@ -123,21 +129,26 @@ Einblick.UI = {
 
 		$( '#topbar .zoom-options' ).hide();
 
+		// Zoom value.
 		if( !isNaN( data ) ) {
+			Einblick.UI.zoom = data;
 			Einblick.setZoomAll( data );
 			Einblick.UI.update( { zoom: data } );
-			return;
+		}
+		// Named zoom type.
+		else {
+			switch( data ) {
+				case 'fitToWidth':
+					Einblick.UI.zoom = Einblick.fitToWidth();
+					break;
+
+				default:
+					console.warn( '[Einblick.UI._handleZoomFromList]' +
+						' Unknown option: ' + data );
+			}
 		}
 
-		switch( data ) {
-			case 'fitToWidth':
-				Einblick.fitToWidth();
-				break;
-
-			default:
-				console.warn( '[Einblick.UI._handleZoomFromList]' +
-					' Unknown option: ' + data );
-		}
+		Einblick.UI.scrollToPage( Einblick.currentPageIndex );
 	},
 
 
@@ -336,6 +347,21 @@ Einblick.UI = {
 		}
 
 		cb && cb();
+	},
+
+
+	/**
+	 * Scroll to the page with the given index.
+	 * @param {Number} index Index of the page to scroll to.
+	 */
+	scrollToPage: function( index ) {
+		var first = $( '#pdf-page-1' )[0];
+		var node = $( '#pdf-page-' + index )[0];
+
+		if( first && node ) {
+			var top = node.offsetTop - first.offsetTop;
+			$( '.canvas-wrap' ).scrollTop( top );
+		}
 	},
 
 

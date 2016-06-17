@@ -74,6 +74,8 @@ var Einblick = {
 
 		Einblick.setZoomAll( zoom );
 		Einblick.UI.update( { zoom: zoom } );
+
+		return zoom;
 	},
 
 
@@ -185,14 +187,14 @@ var Einblick = {
 	 * Show the next page.
 	 */
 	pageNext: function() {
-		if( !this.page ) {
+		if( !Einblick.currentPageIndex ) {
 			return;
 		}
 
-		// pageIndex is zero-based.
-		var curr = this.page.pageIndex;
-		var next = Math.min( curr + 2, this.doc.numPages );
-		this.showPage( next );
+		var curr = Einblick.currentPageIndex;
+		var next = Math.min( curr + 1, Einblick.doc.numPages );
+		Einblick.showPage( next );
+		Einblick.UI.scrollToPage( next );
 	},
 
 
@@ -200,14 +202,15 @@ var Einblick = {
 	 * Show the previous page.
 	 */
 	pagePrevious: function() {
-		if( !this.page ) {
+		if( !Einblick.currentPageIndex ) {
 			return;
 		}
 
 		// pageIndex is zero-based.
-		var curr = this.page.pageIndex;
-		var prev = Math.max( curr, 1 );
-		this.showPage( prev );
+		var curr = Einblick.currentPageIndex;
+		var prev = Math.max( curr - 1, 1 );
+		Einblick.showPage( prev );
+		Einblick.UI.scrollToPage( prev );
 	},
 
 
@@ -258,6 +261,8 @@ var Einblick = {
 	 * @param {Number} zoom New zoom value.
 	 */
 	setZoomAll: function( zoom ) {
+		var vp = null;
+
 		for( var index in Einblick.pages ) {
 			var cData = Einblick.UI.canvases[index];
 
@@ -271,7 +276,7 @@ var Einblick = {
 				continue;
 			}
 
-			var vp = page.getViewport( zoom );
+			vp = page.getViewport( zoom );
 			var c = cData.canvas;
 			c.width = vp.width;
 			c.height = vp.height;
@@ -283,6 +288,13 @@ var Einblick = {
 				viewport: vp
 			} );
 		}
+
+		if( vp ) {
+			Einblick.UI.update( {
+				pageWidth: vp.width,
+				pageHeight: vp.height
+			} );
+		}
 	},
 
 
@@ -291,7 +303,6 @@ var Einblick = {
 	 */
 	showMemoryUsage: function() {
 		var inRAM = process.memoryUsage().rss;
-
 		Einblick.UI.update( { memory: inRAM } );
 	},
 
@@ -318,14 +329,14 @@ var Einblick = {
 				Einblick.pages[index] = page;
 				Einblick.currentPageIndex = index;
 
-				var viewport = Einblick.setZoom( 1.0, index );
+				var viewport = Einblick.setZoom( Einblick.UI.zoom, index );
 
 				if( viewport ) {
 					Einblick.UI.update( {
 						index: index,
 						pageHeight: viewport.height,
 						pageWidth: viewport.width,
-						zoom: 1.0
+						zoom: Einblick.UI.zoom
 					} );
 				}
 
@@ -354,7 +365,7 @@ var Einblick = {
 			this.doc.getPage( indexPrev ).then( function( page ) {
 				var indexPrev = page.pageIndex + 1;
 				Einblick.pages[indexPrev] = page;
-				Einblick.setZoom( 1.0, indexPrev );
+				Einblick.setZoom( Einblick.UI.zoom, indexPrev );
 			} );
 		}
 
@@ -376,7 +387,7 @@ var Einblick = {
 			this.doc.getPage( indexNext ).then( function( page ) {
 				var indexNext = page.pageIndex + 1;
 				Einblick.pages[indexNext] = page;
-				Einblick.setZoom( 1.0, indexNext );
+				Einblick.setZoom( Einblick.UI.zoom, indexNext );
 			} );
 		}
 	},
