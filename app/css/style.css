@@ -16,6 +16,7 @@
 
 ::-webkit-scrollbar:horizontal {
 	height: 16px;
+	min-width: 100px;
 }
 
 ::-webkit-scrollbar:vertical {
@@ -149,11 +150,15 @@ header {
 		}
 
 		.zoom-options .sep {
-			border-bottom: 1px solid #2D2D2D;
+			border-bottom: 2px solid #3A3A3A;
 			padding: 0;
 		}
 
-	.zoom {
+		.zoom-options li.zoom {
+			text-align: right;
+		}
+
+	input.zoom {
 		text-align: right;
 		width: 50px;
 	}

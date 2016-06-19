@@ -4,7 +4,13 @@
 Einblick.UI = {
 
 
+	PAGE_MODE: {
+		CONTINUOUS: 1,
+		SINGLE: 2
+	},
+
 	canvases: {},
+	mode: null,
 	zoom: 1.0,
 
 	_timeoutLoadPage: 0,
@@ -58,11 +64,16 @@ Einblick.UI = {
 			return;
 		}
 
-		Einblick.showPage( index, function() {
+		index = Einblick.showPage( index, function() {
 			$input.select();
 			$input.focus();
 		} );
-		Einblick.UI.scrollToPage( index );
+		this.scrollToPage( index );
+
+		if( this.mode === this.PAGE_MODE.SINGLE ) {
+			$( '.canvas-wrap canvas' ).hide();
+			$( '#pdf-page-' + index ).show();
+		}
 	},
 
 
@@ -72,6 +83,10 @@ Einblick.UI = {
 	 */
 	_handlePageScroll: function( ev ) {
 		clearTimeout( this._timeoutLoadPage );
+
+		if( this.mode === this.PAGE_MODE.SINGLE ) {
+			return;
+		}
 
 		this._timeoutLoadPage = setTimeout( function() {
 			var scrollTop = ev.delegateTarget.scrollTop;
@@ -112,10 +127,10 @@ Einblick.UI = {
 		}
 
 		zoom /= 100;
-		Einblick.UI.zoom = zoom;
+		this.zoom = zoom;
 		Einblick.setZoomAll( zoom );
-		Einblick.UI.update( { zoom: zoom } );
-		Einblick.UI.scrollToPage( Einblick.currentPageIndex );
+		this.update( { zoom: zoom } );
+		this.scrollToPage( Einblick.currentPageIndex );
 	},
 
 
@@ -130,25 +145,30 @@ Einblick.UI = {
 		$( '#topbar .zoom-options' ).hide();
 
 		// Zoom value.
-		if( !isNaN( data ) ) {
-			Einblick.UI.zoom = data;
-			Einblick.setZoomAll( data );
-			Einblick.UI.update( { zoom: data } );
+		if( data.type == 'zoom' ) {
+			this.zoom = data.value;
+			Einblick.setZoomAll( data.value );
+			this.update( { zoom: data.value } );
 		}
-		// Named zoom type.
+		// Named zoom type or layout mode.
 		else {
-			switch( data ) {
+			switch( data.value ) {
 				case 'fitToWidth':
-					Einblick.UI.zoom = Einblick.fitToWidth();
+					this.zoom = Einblick.fitToWidth();
+					break;
+
+				case this.PAGE_MODE.CONTINUOUS:
+				case this.PAGE_MODE.SINGLE:
+					this.changePageMode( data.value );
 					break;
 
 				default:
 					console.warn( '[Einblick.UI._handleZoomFromList]' +
-						' Unknown option: ' + data );
+						' Unknown option: ' + data.value );
 			}
 		}
 
-		Einblick.UI.scrollToPage( Einblick.currentPageIndex );
+		this.scrollToPage( Einblick.currentPageIndex );
 	},
 
 
@@ -181,7 +201,7 @@ Einblick.UI = {
 	 */
 	_initHeader: function() {
 		var $btnOpenFile = $( '#open-file' );
-		$btnOpenFile.click( this._handleOpenFile );
+		$btnOpenFile.click( this._handleOpenFile.bind( this ) );
 
 
 		var $btnPagePrev = $( '#page-prev' );
@@ -195,7 +215,7 @@ Einblick.UI = {
 		} );
 
 		var $inputPage = $( '#topbar .index' );
-		$inputPage.keyup( this._handlePageIndex );
+		$inputPage.keyup( this._handlePageIndex.bind( this ) );
 
 
 		this._initZoomOptions();
@@ -206,7 +226,7 @@ Einblick.UI = {
 		} );
 
 		var $inputZoom = $( '#topbar .zoom' );
-		$inputZoom.keyup( this._handleZoomFromInput );
+		$inputZoom.keyup( this._handleZoomFromInput.bind( this ) );
 	},
 
 
@@ -218,23 +238,39 @@ Einblick.UI = {
 
 		var options = [
 			{
+				cls: 'layout',
+				text: Einblick.t( 'layoutSinglePage' ),
+				value: this.PAGE_MODE.SINGLE
+			},
+			{
+				cls: 'layout',
+				text: Einblick.t( 'layoutContinuous' ),
+				value: this.PAGE_MODE.CONTINUOUS
+			},
+			{ value: '---' },
+			{
+				cls: 'zoom_named',
 				text: Einblick.t( 'fitToWidth' ),
 				value: 'fitToWidth'
 			},
 			{ value: '---' },
 			{
+				cls: 'zoom',
 				text: Einblick.t( '50%' ),
 				value: 0.5
 			},
 			{
+				cls: 'zoom',
 				text: Einblick.t( '100%' ),
 				value: 1.0
 			},
 			{
+				cls: 'zoom',
 				text: Einblick.t( '150%' ),
 				value: 1.5
 			},
 			{
+				cls: 'zoom',
 				text: Einblick.t( '200%' ),
 				value: 2.0
 			}
@@ -248,12 +284,49 @@ Einblick.UI = {
 				$item.addClass( 'sep' );
 			}
 			else {
+				o.cls && $item.addClass( o.cls );
 				$item.html( o.text );
-				$item.data( 'zoom', o.value );
-				$item.click( this._handleZoomFromList );
+				$item.data( 'zoom', {
+					value: o.value,
+					type: o.cls
+				} );
+				$item.click( this._handleZoomFromList.bind( this ) );
 			}
 
 			$list.append( $item );
+		}
+	},
+
+
+	/**
+	 * Change the page mode.
+	 * @param {Einblick.UI.PAGE_MODE} mode Page mode.
+	 */
+	changePageMode: function( mode ) {
+		if( this.mode === mode ) {
+			return;
+		}
+
+		this.mode = mode;
+
+		var clsStr = '';
+		var MODES = this.PAGE_MODE;
+
+		for( var key in MODES ) {
+			var m = MODES[key];
+			clsStr += ' layout-mode-' + m;
+		}
+
+		$( '#main' ).removeClass( clsStr );
+		$( '#main' ).addClass( 'layout-mode-' + mode );
+
+		if( mode == MODES.SINGLE ) {
+			$( '.canvas-wrap canvas' ).hide();
+			$( '#pdf-page-' + Einblick.currentPageIndex ).show();
+			$( '.canvas-wrap' ).scrollTop( 0 );
+		}
+		else {
+			$( '.canvas-wrap canvas' ).show();
 		}
 	},
 
@@ -264,11 +337,11 @@ Einblick.UI = {
 	 */
 	clear: function() {
 		$( 'title' ).text( '' );
-		clearTimeout( Einblick.UI._timeoutLoadPage );
-		Einblick.UI.canvases = {};
+		clearTimeout( this._timeoutLoadPage );
+		this.canvases = {};
 		$( '.canvas-wrap' ).html( '' );
 
-		Einblick.UI.update( {
+		this.update( {
 			filesize: 0,
 			index: 0,
 			numPages: 0
@@ -316,6 +389,8 @@ Einblick.UI = {
 	 * @param {Function} cb Callback when done.
 	 */
 	init: function( cb ) {
+		this.mode = this.PAGE_MODE.CONTINUOUS;
+
 		this._initHeader();
 		this._initDragAndDrop();
 		$( '.canvas-wrap' ).scroll( this._handlePageScroll.bind( this ) );
@@ -355,6 +430,10 @@ Einblick.UI = {
 	 * @param {Number} index Index of the page to scroll to.
 	 */
 	scrollToPage: function( index ) {
+		if( this.mode === this.PAGE_MODE.SINGLE ) {
+			return;
+		}
+
 		var first = $( '#pdf-page-1' )[0];
 		var node = $( '#pdf-page-' + index )[0];
 
@@ -414,7 +493,7 @@ Einblick.UI = {
 		}
 
 		if( typeof data.filesize === 'number' ) {
-			var formatted = Einblick.UI.formatSize( data.filesize );
+			var formatted = this.formatSize( data.filesize );
 			var s = formatted.size;
 			s = Math.round( s * 100 ) / 100;
 
@@ -422,7 +501,7 @@ Einblick.UI = {
 		}
 
 		if( typeof data.memory === 'number' ) {
-			var formatted = Einblick.UI.formatSize( data.memory );
+			var formatted = this.formatSize( data.memory );
 			var s = formatted.size;
 			s = Math.round( s * 100 ) / 100;
 

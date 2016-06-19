@@ -16,6 +16,16 @@ app.on( 'window-all-closed', function() {
 
 
 app.on( 'ready', function() {
+	global.argv = {};
+
+	for( var i = 0; i < process.argv.length; i++ ) {
+		var parts = process.argv[i].split( '=' );
+
+		if( parts.length >= 2 ) {
+			global.argv[parts[0]] = parts[1];
+		}
+	}
+
 	mainWindow = new BrowserWindow( {
 		autoHideMenuBar: true,
 		backgroundColor: '#000000',

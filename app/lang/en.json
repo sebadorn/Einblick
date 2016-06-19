@@ -1,3 +1,5 @@
 {
-	"fitToWidth": "Fit to width"
+	"fitToWidth": "Fit to width",
+	"layoutContinuous": "Continuous",
+	"layoutSinglePage": "Single page"
 }
