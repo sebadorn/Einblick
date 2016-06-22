@@ -10,6 +10,7 @@ var Einblick = {
 	pages: {},
 
 	_intervalMemory: 0,
+	_pageHistory: [],
 	_scripts: [
 		'UI.js'
 	],
@@ -43,6 +44,56 @@ var Einblick = {
 	},
 
 
+	autoUnloadPages: function() {
+		var current = Einblick.currentPageIndex;
+		var pPrev = 1;
+		var trend = 0;
+		var unloadThreshold = 4;
+		var minPageDistance = 6;
+
+		for( var i = 0; i < this._pageHistory.length; i++ ) {
+			var p = this._pageHistory[i];
+
+			if( i == 0 ) {
+				pPrev = p;
+				continue;
+			}
+
+			trend += ( p - pPrev );
+			pPrev = p;
+		}
+
+		for( var pageIndex in Einblick.UI.canvases ) {
+			var c = Einblick.UI.canvases[pageIndex];
+
+			if( !c.loaded ) {
+				continue;
+			}
+
+			// Moving down.
+			if( trend >= unloadThreshold ) {
+				// Unload earlier pages.
+				if( current - pageIndex >= minPageDistance ) {
+					this.pages[pageIndex].cleanup();
+					delete this.pages[pageIndex];
+					c.canvas.width = c.canvas.width;
+					c.loaded = false;
+				}
+			}
+			// Moving up.
+			else if( trend <= -unloadThreshold ) {
+				// Unload later pages.
+				if( pageIndex - current >= minPageDistance ) {
+					this.pages[pageIndex].cleanup();
+					delete this.pages[pageIndex];
+					c.canvas.width = c.canvas.width;
+					c.loaded = false;
+				}
+			}
+		}
+	},
+
+
 	/**
 	 * Clear the old document to
 	 * prepare for a new one.
@@ -50,6 +101,11 @@ var Einblick = {
 	clear: function() {
 		Einblick.UI.clear();
 		this.currentPageIndex = null;
+
+		if( this.doc ) {
+			this.doc.cleanup();
+		}
+
 		this.doc = null;
 		this.docMeta = null;
 		this.pages = {};
@@ -96,7 +152,6 @@ var Einblick = {
 				Einblick.UI.init( function() {
 					PDFJS.workerSrc = 'js/pdf.worker.js';
 
-					var electron = require( 'electron' );
 					var argv = electron.remote.getGlobal( 'argv' );
 
 					if( argv['--open'] && argv['--open'].length > 0 ) {
@@ -340,6 +395,15 @@ var Einblick = {
 
 		// Clamp the page index.
 		index = Math.max( 1, Math.min( this.doc.numPages, index ) );
+
+		this._pageHistory.push( index );
+		var phLen = this._pageHistory.length;
+
+		if( phLen > 10 ) {
+			this._pageHistory.splice( 0, phLen - 10 );
+		}
+
+		Einblick.autoUnloadPages();
 
 		var UI = Einblick.UI;
 		var cData = UI.canvases[index];

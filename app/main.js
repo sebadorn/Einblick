@@ -46,10 +46,4 @@ app.on( 'ready', function() {
 	mainWindow.on( 'closed', function() {
 		mainWindow = null;
 	} );
-
-	if( !electron.globalShortcut.isRegistered( 'F12' ) ) {
-		electron.globalShortcut.register( 'F12', function() {
-			mainWindow.toggleDevTools();
-		} );
-	}
 } );

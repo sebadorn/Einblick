@@ -231,6 +231,19 @@ Einblick.UI = {
 
 
 	/**
+	 * Register keyboard shortcuts.
+	 */
+	_initShortcuts: function() {
+		$( 'body' ).keyup( function( ev ) {
+			// F12: toggle dev tools
+			if( ev.keyCode == 123 ) {
+				electron.remote.getCurrentWindow().toggleDevTools();
+			}
+		} );
+	},
+
+
+	/**
 	 * Initialize the zoom options.
 	 */
 	_initZoomOptions: function() {
@@ -389,6 +402,8 @@ Einblick.UI = {
 	 * @param {Function} cb Callback when done.
 	 */
 	init: function( cb ) {
+		this._initShortcuts();
+
 		this.mode = this.PAGE_MODE.CONTINUOUS;
 
 		this._initHeader();
