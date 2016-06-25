@@ -8,11 +8,9 @@
 	<link rel="stylesheet" href="css/style.css" />
 	<style id="dynamic-style"></style>
 	<script src="js/pdf.js"></script>
-	<script src="js/compatibility.js"></script>
 	<script src="js/Einblick.js"></script>
 	<script>
 		const electron = require( 'electron' );
-		window.$ = window.jQuery = require( __dirname + '/js/jquery.min.js' );
 
 		window.addEventListener( 'load', function() {
 			Einblick.init();

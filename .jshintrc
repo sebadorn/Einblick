@@ -4,6 +4,7 @@
 	"expr": true,
 	"jquery": true,
 	"globals": {
+		"electron": false,
 		"PDFJS": false,
 		"Einblick": true
 	},

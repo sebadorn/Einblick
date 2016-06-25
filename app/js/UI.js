@@ -23,9 +23,11 @@ Einblick.UI = {
 	 */
 	_closeAll: function( ev ) {
 		var t = ev.target;
+		var $laz = document.querySelector( '.layout-and-zoom' );
 
-		if( !$.contains( $( '.layout-and-zoom' )[0], t ) ) {
-			$( '.zoom-options' ).hide();
+		if( !$laz.contains( t ) ) {
+			var $zo = document.querySelector( '.zoom-options' );
+			$zo.style.display = 'none';
 		}
 	},
 
@@ -35,16 +37,18 @@ Einblick.UI = {
 	 * @param {Event} ev
 	 */
 	_handleOpenFile: function( ev ) {
-		var $file = $( '<input type="file" />' );
+		var $file = document.createElement( 'input' );
+		$file.type = 'file';
 
-		$file.on( 'change', function( evFile ) {
+		$file.addEventListener( 'change', function( evFile ) {
 			if( evFile.target.files.length > 0 ) {
 				var p = evFile.target.files[0].path;
 				Einblick.loadFile( p );
 			}
 		} );
 
-		$file.click();
+		var event = new MouseEvent( 'click' );
+		$file.dispatchEvent( event );
 	},
 
 
@@ -57,22 +61,24 @@ Einblick.UI = {
 			return;
 		}
 
-		var $input = $( ev.delegateTarget );
-		var index = Number( $input.val() );
+		var $input = ev.target;
+		var index = Number( $input.value );
 
 		if( isNaN( index ) ) {
 			return;
 		}
 
 		index = Einblick.showPage( index, function() {
-			$input.select();
 			$input.focus();
+			$input.select();
 		} );
 		this.scrollToPage( index );
 
 		if( this.mode === this.PAGE_MODE.SINGLE ) {
-			$( '.canvas-wrap canvas' ).hide();
-			$( '#pdf-page-' + index ).show();
+			this.hideAllCanvases();
+
+			var $p = document.querySelector( '#pdf-page-' + index );
+			$p.style.display = '';
 		}
 	},
 
@@ -89,8 +95,11 @@ Einblick.UI = {
 		}
 
 		this._timeoutLoadPage = setTimeout( function() {
-			var scrollTop = ev.delegateTarget.scrollTop;
-			var pageHeight = $( '#pdf-page-1' ).height();
+			var $p = document.querySelector( '#pdf-page-1' );
+			var pStyle = window.getComputedStyle( $p );
+			var pageHeight = Number( pStyle.height.replace( 'px', '' ) );
+
+			var scrollTop = ev.target.scrollTop;
 			var segment = pageHeight + 4;
 			var pageIndex = ~~( scrollTop / segment ) + 1;
 
@@ -110,9 +119,9 @@ Einblick.UI = {
 			return;
 		}
 
-		var $input = $( ev.delegateTarget );
-		var zoom = $input.val();
-		zoom = $.trim( zoom );
+		var $input = ev.target;
+		var zoom = String( $input.value );
+		zoom = zoom.trim();
 		zoom = zoom.replace( '%', '' );
 		zoom = zoom.replace( ',', '.' );
 
@@ -139,32 +148,35 @@ Einblick.UI = {
 	 * @param {MouseEvent} ev
 	 */
 	_handleZoomFromList: function( ev ) {
-		var $item = $( ev.delegateTarget );
-		var data = $item.data( 'zoom' );
+		var $item = ev.target;
+		var data = $item.getAttribute( 'data-zoom' ).split( '|' );
+		var dataZoom = data[0];
+		var dataType = data[1];
 
-		$( '#topbar .zoom-options' ).hide();
+		var $zo = document.querySelector( '#topbar .zoom-options' );
+		$zo.style.display = 'none';
 
 		// Zoom value.
-		if( data.type == 'zoom' ) {
-			this.zoom = data.value;
-			Einblick.setZoomAll( data.value );
-			this.update( { zoom: data.value } );
+		if( dataType == 'zoom' ) {
+			this.zoom = Number( dataZoom );
+			Einblick.setZoomAll( this.zoom );
+			this.update( { zoom: this.zoom } );
 		}
 		// Named zoom type or layout mode.
 		else {
-			switch( data.value ) {
+			switch( dataZoom ) {
 				case 'fitToWidth':
 					this.zoom = Einblick.fitToWidth();
 					break;
 
 				case this.PAGE_MODE.CONTINUOUS:
 				case this.PAGE_MODE.SINGLE:
-					this.changePageMode( data.value );
+					this.changePageMode( dataZoom );
 					break;
 
 				default:
 					console.warn( '[Einblick.UI._handleZoomFromList]' +
-						' Unknown option: ' + data.value );
+						' Unknown option: ' + dataZoom );
 			}
 		}
 
@@ -176,16 +188,16 @@ Einblick.UI = {
 	 * Initialize Drag&Drop.
 	 */
 	_initDragAndDrop: function() {
-		var $area = $( '.canvas-wrap' );
+		var $area = document.querySelector( '.canvas-wrap' );
 
-		$area.on( 'dragover', function( ev ) {
+		$area.addEventListener( 'dragover', function( ev ) {
 			ev.preventDefault();
 		} );
 
-		$area.on( 'drop', function( ev ) {
+		$area.addEventListener( 'drop', function( ev ) {
 			ev.preventDefault();
 
-			var files = ev.originalEvent.dataTransfer.files;
+			var files = ev.dataTransfer.files;
 
 			if( files.length === 0 ) {
 				return;
@@ -200,33 +212,41 @@ Einblick.UI = {
 	 * Initialize the header.
 	 */
 	_initHeader: function() {
-		var $btnOpenFile = $( '#open-file' );
-		$btnOpenFile.click( this._handleOpenFile.bind( this ) );
+		var $btnOpenFile = document.querySelector( '#open-file' );
+		$btnOpenFile.addEventListener( 'click', this._handleOpenFile.bind( this ) );
 
 
-		var $btnPagePrev = $( '#page-prev' );
-		$btnPagePrev.click( function( ev ) {
+		var $btnPagePrev = document.querySelector( '#page-prev' );
+		$btnPagePrev.addEventListener( 'click', function( ev ) {
 			Einblick.pagePrevious();
 		} );
 
-		var $btnPageNext = $( '#page-next' );
-		$btnPageNext.click( function( ev ) {
+		var $btnPageNext = document.querySelector( '#page-next' );
+		$btnPageNext.addEventListener( 'click', function( ev ) {
 			Einblick.pageNext();
 		} );
 
-		var $inputPage = $( '#topbar .index' );
-		$inputPage.keyup( this._handlePageIndex.bind( this ) );
+		var $inputPage = document.querySelector( '#topbar .index' );
+		$inputPage.addEventListener( 'keyup', this._handlePageIndex.bind( this ) );
 
 
 		this._initZoomOptions();
 
-		var $btnZoom = $( '#select-zoom' );
-		$btnZoom.click( function( ev ) {
-			$( '#topbar .zoom-options' ).toggle();
+		var $btnZoom = document.querySelector( '#select-zoom' );
+		$btnZoom.addEventListener( 'click', function( ev ) {
+			var $zo = document.querySelector( '#topbar .zoom-options' );
+			var style = window.getComputedStyle( $zo );
+
+			if( style.display == 'none' ) {
+				$zo.style.display = 'block';
+			}
+			else {
+				$zo.style.display = 'none';
+			}
 		} );
 
-		var $inputZoom = $( '#topbar .zoom' );
-		$inputZoom.keyup( this._handleZoomFromInput.bind( this ) );
+		var $inputZoom = document.querySelector( '#topbar input.zoom' );
+		$inputZoom.addEventListener( 'keyup', this._handleZoomFromInput.bind( this ) );
 	},
 
 
@@ -234,10 +254,13 @@ Einblick.UI = {
 	 * Register keyboard shortcuts.
 	 */
 	_initShortcuts: function() {
-		$( 'body' ).keyup( function( ev ) {
+		var $body = document.body;
+
+		$body.addEventListener( 'keyup', function( ev ) {
 			// F12: toggle dev tools
 			if( ev.keyCode == 123 ) {
-				electron.remote.getCurrentWindow().toggleDevTools();
+				var win = electron.remote.getCurrentWindow();
+				win.toggleDevTools();
 			}
 		} );
 	},
@@ -247,7 +270,7 @@ Einblick.UI = {
 	 * Initialize the zoom options.
 	 */
 	_initZoomOptions: function() {
-		var $list = $( '#topbar .zoom-options' );
+		var $list = document.querySelector( '#topbar .zoom-options' );
 
 		var options = [
 			{
@@ -291,22 +314,22 @@ Einblick.UI = {
 
 		for( var i = 0; i < options.length; i++ ) {
 			var o = options[i];
-			var $item = $( '<li></li>' );
+			var $item = document.createElement( 'li' );
 
 			if( o.value == '---' ) {
-				$item.addClass( 'sep' );
+				$item.className = 'sep';
 			}
 			else {
-				o.cls && $item.addClass( o.cls );
-				$item.html( o.text );
-				$item.data( 'zoom', {
-					value: o.value,
-					type: o.cls
-				} );
-				$item.click( this._handleZoomFromList.bind( this ) );
+				if( o.cls ) {
+					$item.className = o.cls;
+				}
+
+				$item.innerHTML = o.text;
+				$item.setAttribute( 'data-zoom', o.value + '|' + o.cls);
+				$item.addEventListener( 'click', this._handleZoomFromList.bind( this ) );
 			}
 
-			$list.append( $item );
+			$list.appendChild( $item );
 		}
 	},
 
@@ -322,24 +345,29 @@ Einblick.UI = {
 
 		this.mode = mode;
 
-		var clsStr = '';
+		var $main = document.querySelector( '#main' );
+		var clsNow = $main.className;
 		var MODES = this.PAGE_MODE;
 
 		for( var key in MODES ) {
 			var m = MODES[key];
-			clsStr += ' layout-mode-' + m;
+			clsNow = clsNow.replace( 'layout-mode-' + m, '' );
 		}
 
-		$( '#main' ).removeClass( clsStr );
-		$( '#main' ).addClass( 'layout-mode-' + mode );
+		clsNow += ' layout-mode-' + mode;
+		$main.className = clsNow.trim();
 
 		if( mode == MODES.SINGLE ) {
-			$( '.canvas-wrap canvas' ).hide();
-			$( '#pdf-page-' + Einblick.currentPageIndex ).show();
-			$( '.canvas-wrap' ).scrollTop( 0 );
+			this.hideAllCanvases();
+
+			var $p = document.querySelector( '#pdf-page-' + Einblick.currentPageIndex );
+			$p.style.display = '';
+
+			var $cw = document.querySelector( '.canvas-wrap' );
+			$cw.scrollTop = 0;
 		}
 		else {
-			$( '.canvas-wrap canvas' ).show();
+			this.showAllCanvases();
 		}
 	},
 
@@ -349,10 +377,10 @@ Einblick.UI = {
 	 * to prepare for a new one.
 	 */
 	clear: function() {
-		$( 'title' ).text( '' );
+		document.querySelector( 'title' ).textContent = '';
 		clearTimeout( this._timeoutLoadPage );
 		this.canvases = {};
-		$( '.canvas-wrap' ).html( '' );
+		document.querySelector( '.canvas-wrap' ).innerHTML = '';
 
 		this.update( {
 			filesize: 0,
@@ -398,6 +426,18 @@ Einblick.UI = {
 
 
 	/**
+	 * Hide all canvases.
+	 */
+	hideAllCanvases: function() {
+		var $cs = document.querySelectorAll( '.canvas-wrap canvas' );
+
+		for( var i = 0; i < $cs.length; i++ ) {
+			$cs[i].style.display = 'none';
+		}
+	},
+
+
+	/**
 	 * Initialize the UI.
 	 * @param {Function} cb Callback when done.
 	 */
@@ -408,9 +448,12 @@ Einblick.UI = {
 
 		this._initHeader();
 		this._initDragAndDrop();
-		$( '.canvas-wrap' ).scroll( this._handlePageScroll.bind( this ) );
 
-		$( 'body' ).click( this._closeAll.bind( this ) );
+		var $cw = document.querySelector( '.canvas-wrap' );
+		$cw.addEventListener( 'scroll', this._handlePageScroll.bind( this ) );
+
+		var $body = document.body;
+		$body.addEventListener( 'click', this._closeAll.bind( this ) );
 
 		cb && cb();
 	},
@@ -421,17 +464,16 @@ Einblick.UI = {
 	 * @param {Function} cb Callback.
 	 */
 	initPages: function( cb ) {
-		var $cWrap = $( '.canvas-wrap' );
+		var $cWrap = document.querySelector( '.canvas-wrap' );
 		this.canvases = {};
 
 		for( var i = 1; i <= Einblick.doc.numPages; i++ ) {
-			var $canvas = $( '<canvas></canvas>' );
-			$canvas.attr( 'id', 'pdf-page-' + i );
-
-			$cWrap.append( $canvas );
+			var $canvas = document.createElement( 'canvas' );
+			$canvas.id = 'pdf-page-' + i;
+			$cWrap.appendChild( $canvas );
 
 			this.canvases[i] = {
-				canvas: $canvas[0],
+				canvas: $canvas,
 				loaded: false
 			};
 		}
@@ -449,12 +491,25 @@ Einblick.UI = {
 			return;
 		}
 
-		var first = $( '#pdf-page-1' )[0];
-		var node = $( '#pdf-page-' + index )[0];
+		var first = document.querySelector( '#pdf-page-1' );
+		var node = document.querySelector( '#pdf-page-' + index );
 
 		if( first && node ) {
 			var top = node.offsetTop - first.offsetTop;
-			$( '.canvas-wrap' ).scrollTop( top );
+			var $cw = document.querySelector( '.canvas-wrap' );
+			$cw.scrollTop = top;
+		}
+	},
+
+
+	/**
+	 * Show all canvases again after having hidden them.
+	 */
+	showAllCanvases: function() {
+		var $cs = document.querySelectorAll( '.canvas-wrap canvas' );
+
+		for( var i = 0; i < $cs.length; i++ ) {
+			$cs[i].style.display = '';
 		}
 	},
 
@@ -466,15 +521,18 @@ Einblick.UI = {
 	update: function( data ) {
 		if( typeof data.zoom === 'number' ) {
 			var z = data.zoom * 100.0;
-			$( '#topbar .zoom' ).val( z + '%' );
+			var $z = document.querySelector( '#topbar input.zoom' );
+			$z.value = z + '%';
 		}
 
 		if( typeof data.index === 'number' ) {
-			$( '#topbar .index' ).val( data.index );
+			var $i = document.querySelector( '#topbar input.index' );
+			$i.value = data.index;
 		}
 
 		if( typeof data.numPages === 'number' ) {
-			$( '#topbar .pages' ).text( data.numPages );
+			var $p = document.querySelector( '#topbar .pages' );
+			$p.textContent = data.numPages;
 		}
 
 		if(
@@ -498,13 +556,13 @@ Einblick.UI = {
 				w += 'px';
 			}
 
-			var $style = $( 'style#dynamic-style' );
-			$style.text( [
+			var $style = document.querySelector( 'style#dynamic-style' );
+			$style.textContent = [
 				'.canvas-wrap canvas {',
 					'height: ' + h + ';',
 					'width: ' + w + ';',
 				'}'
-			].join( '' ) );
+			].join( '' );
 		}
 
 		if( typeof data.filesize === 'number' ) {
@@ -512,7 +570,8 @@ Einblick.UI = {
 			var s = formatted.size;
 			s = Math.round( s * 100 ) / 100;
 
-			$( '#statusbar .filesize .val' ).html( s + '&thinsp;' + formatted.unit );
+			var $s = document.querySelector( '#statusbar .filesize .val' );
+			$s.innerHTML = s + '&thinsp;' + formatted.unit;
 		}
 
 		if( typeof data.memory === 'number' ) {
@@ -520,7 +579,8 @@ Einblick.UI = {
 			var s = formatted.size;
 			s = Math.round( s * 100 ) / 100;
 
-			$( '#statusbar .memory .val' ).html( s + '&thinsp;' + formatted.unit );
+			var $s = document.querySelector( '#statusbar .memory .val' );
+			$s.innerHTML = s + '&thinsp;' + formatted.unit;
 		}
 	}
 

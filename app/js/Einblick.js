@@ -44,11 +44,14 @@ var Einblick = {
 	},
 
 
+	/**
+	 * Free some memory by unloading/cleaning old pages.
+	 */
 	autoUnloadPages: function() {
 		var current = Einblick.currentPageIndex;
 		var pPrev = 1;
 		var trend = 0;
-		var unloadThreshold = 4;
+		var unloadThreshold = 3;
 		var minPageDistance = 6;
 
 		for( var i = 0; i < this._pageHistory.length; i++ ) {
@@ -62,6 +65,11 @@ var Einblick = {
 			trend += ( p - pPrev );
 			pPrev = p;
 		}
+
+		if( trend < unloadThreshold && trend > -unloadThreshold ) {
+			return;
+		}
+
 
 		for( var pageIndex in Einblick.UI.canvases ) {
 			var c = Einblick.UI.canvases[pageIndex];
@@ -100,12 +108,13 @@ var Einblick = {
 	 */
 	clear: function() {
 		Einblick.UI.clear();
-		this.currentPageIndex = null;
 
 		if( this.doc ) {
 			this.doc.cleanup();
 		}
 
+		this._pageHistory = [];
+		this.currentPageIndex = null;
 		this.doc = null;
 		this.docMeta = null;
 		this.pages = {};
@@ -124,8 +133,12 @@ var Einblick = {
 			return;
 		}
 
+		var $cw = document.querySelector( '.canvas-wrap' );
+		var cwStyle = window.getComputedStyle( $cw );
+		var cwWidth = Number( cwStyle.width.replace( 'px', '' ) );
+		var areaWidth = cwWidth - 16;
+
 		var pw = page.pageInfo.view[2];
-		var areaWidth = $( '.canvas-wrap' ).width() - 16;
 		var zoom = Math.round( areaWidth / pw * 100 ) / 100;
 
 		Einblick.setZoomAll( zoom );
@@ -190,7 +203,8 @@ var Einblick = {
 					Einblick.docMeta = meta;
 
 					if( meta && meta.info ) {
-						$( 'title' ).text( meta.info.Title );
+						var $title = document.querySelector( 'title' );
+						$title.textContent = meta.info.Title;
 					}
 				} );
 
@@ -261,8 +275,10 @@ var Einblick = {
 		Einblick.UI.scrollToPage( next );
 
 		if( Einblick.UI.mode === Einblick.UI.PAGE_MODE.SINGLE ) {
-			$( '.canvas-wrap canvas' ).hide();
-			$( '#pdf-page-' + next ).show();
+			Einblick.UI.hideAllCanvases();
+
+			var $p = document.querySelector( '#pdf-page-' + next );
+			$p.style.display = '';
 		}
 	},
 
@@ -282,8 +298,10 @@ var Einblick = {
 		Einblick.UI.scrollToPage( prev );
 
 		if( Einblick.UI.mode === Einblick.UI.PAGE_MODE.SINGLE ) {
-			$( '.canvas-wrap canvas' ).hide();
-			$( '#pdf-page-' + prev ).show();
+			Einblick.UI.hideAllCanvases();
+
+			var $p = document.querySelector( '#pdf-page-' + prev );
+			$p.style.display = '';
 		}
 	},
 
@@ -396,11 +414,14 @@ var Einblick = {
 		// Clamp the page index.
 		index = Math.max( 1, Math.min( this.doc.numPages, index ) );
 
-		this._pageHistory.push( index );
 		var phLen = this._pageHistory.length;
 
-		if( phLen > 10 ) {
-			this._pageHistory.splice( 0, phLen - 10 );
+		if( this._pageHistory[phLen - 1] != index ) {
+			this._pageHistory.push( index );
+
+			if( phLen > 10 ) {
+				this._pageHistory.splice( 0, phLen - 10 );
+			}
 		}
 
 		Einblick.autoUnloadPages();

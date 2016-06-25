@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ELECTRON=./electron/electron-v1.2.1-linux-x64
+ELECTRON=./electron/electron-v1.2.5-linux-x64
 
 cd $(dirname "$0")
 
