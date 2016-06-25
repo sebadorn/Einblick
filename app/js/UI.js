@@ -379,6 +379,8 @@ Einblick.UI = {
 	clear: function() {
 		document.querySelector( 'title' ).textContent = '';
 		clearTimeout( this._timeoutLoadPage );
+
+		// Delete all canvases.
 		this.canvases = {};
 		document.querySelector( '.canvas-wrap' ).innerHTML = '';
 

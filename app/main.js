@@ -18,12 +18,21 @@ app.on( 'window-all-closed', function() {
 app.on( 'ready', function() {
 	global.argv = {};
 
-	for( var i = 0; i < process.argv.length; i++ ) {
-		var parts = process.argv[i].split( '=' );
+	var prevArg = null;
 
-		if( parts.length >= 2 ) {
-			global.argv[parts[0]] = parts[1];
+	for( var i = 0; i < process.argv.length; i++ ) {
+		var arg = process.argv[i];
+
+		if( arg === '-i' ) {
+			prevArg = arg;
+			continue;
 		}
+
+		if( prevArg === '-i' ) {
+			global.argv[prevArg] = arg;
+		}
+
+		prevArg = null;
 	}
 
 	mainWindow = new BrowserWindow( {

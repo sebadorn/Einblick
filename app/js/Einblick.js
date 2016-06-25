@@ -184,12 +184,10 @@ var Einblick = {
 					PDFJS.workerSrc = 'js/pdf.worker.js';
 
 					var argv = electron.remote.getGlobal( 'argv' );
+					var filePath = argv['-i'];
 
-					if( argv['--open'] && argv['--open'].length > 0 ) {
-						Einblick.loadFile( argv['--open'] );
-					}
-					else {
-						Einblick.loadFile( __dirname + '/../test.pdf' );
+					if( filePath && filePath.length > 0 ) {
+						Einblick.loadFile( filePath );
 					}
 
 					cb && cb();
@@ -201,12 +199,18 @@ var Einblick = {
 
 	/**
 	 * Load and open a PDF file.
-	 * @param {String} p Path to the file.
+	 * @param {String} fp Path to the file.
 	 */
-	loadFile: function( p ) {
+	loadFile: function( fp ) {
 		var fs = require( 'fs' );
+		var path = require( 'path' );
 
-		fs.lstat( p, function( err, stat ) {
+		if( !path.isAbsolute( fp ) ) {
+			var cwd = process.cwd();
+			fp = path.join( cwd, fp );
+		}
+
+		fs.lstat( fp, function( err, stat ) {
 			if( err ) {
 				console.error( err );
 				return;
@@ -214,7 +218,7 @@ var Einblick = {
 
 			Einblick.clear();
 
-			PDFJS.getDocument( p ).then( function( pdf ) {
+			PDFJS.getDocument( fp ).then( function( pdf ) {
 				Einblick.doc = pdf;
 
 				pdf.getMetadata().then( function( meta ) {
