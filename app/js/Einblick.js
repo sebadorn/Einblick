@@ -57,7 +57,7 @@ var Einblick = {
 		for( var i = 0; i < this._pageHistory.length; i++ ) {
 			var p = this._pageHistory[i];
 
-			if( i == 0 ) {
+			if( i === 0 ) {
 				pPrev = p;
 				continue;
 			}
@@ -70,6 +70,8 @@ var Einblick = {
 			return;
 		}
 
+
+		var $cw = document.querySelector( '.canvas-wrap' );
 
 		for( var pageIndex in Einblick.UI.canvases ) {
 			var c = Einblick.UI.canvases[pageIndex];
@@ -84,7 +86,15 @@ var Einblick = {
 				if( current - pageIndex >= minPageDistance ) {
 					this.pages[pageIndex].cleanup();
 					delete this.pages[pageIndex];
-					c.canvas.width = c.canvas.width;
+
+					var $newCanvas = document.createElement( 'canvas' );
+					$newCanvas.id = c.canvas.id;
+					$newCanvas.style = c.canvas.style;
+					$newCanvas.width = c.canvas.width;
+					$newCanvas.height = c.canvas.height;
+					$cw.replaceChild( $newCanvas, c.canvas );
+
+					c.canvas = $newCanvas;
 					c.loaded = false;
 				}
 			}
@@ -94,7 +104,15 @@ var Einblick = {
 				if( pageIndex - current >= minPageDistance ) {
 					this.pages[pageIndex].cleanup();
 					delete this.pages[pageIndex];
-					c.canvas.width = c.canvas.width;
+
+					var $newCanvas = document.createElement( 'canvas' );
+					$newCanvas.id = c.canvas.id;
+					$newCanvas.style = c.canvas.style;
+					$newCanvas.width = c.canvas.width;
+					$newCanvas.height = c.canvas.height;
+					$cw.replaceChild( $newCanvas, c.canvas );
+
+					c.canvas = $newCanvas;
 					c.loaded = false;
 				}
 			}
