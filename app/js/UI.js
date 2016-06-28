@@ -5,8 +5,8 @@ Einblick.UI = {
 
 
 	PAGE_MODE: {
-		CONTINUOUS: 1,
-		SINGLE: 2
+		CONTINUOUS: 'continous',
+		SINGLE: 'single'
 	},
 
 	canvases: {},

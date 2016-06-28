@@ -1,5 +1,7 @@
-electron
-pdf.js
+# Directories
+electron/
+pdf.js/
 
+# Files
 *.sublime-*
 *.pdf
