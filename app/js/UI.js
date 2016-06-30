@@ -257,10 +257,26 @@ Einblick.UI = {
 		var $body = document.body;
 
 		$body.addEventListener( 'keyup', function( ev ) {
-			// F12: toggle dev tools
-			if( ev.keyCode == 123 ) {
-				var win = electron.remote.getCurrentWindow();
-				win.toggleDevTools();
+			switch( ev.keyCode ) {
+				// Arrow left: Previous page.
+				case 37:
+					if( !Einblick.UI.isInput( ev.target ) ) {
+						Einblick.pagePrevious();
+					}
+					break;
+
+				// Arrow right: Next page.
+				case 39:
+					if( !Einblick.UI.isInput( ev.target ) ) {
+						Einblick.pageNext();
+					}
+					break;
+
+				// F12: toggle dev tools
+				case 123:
+					var win = electron.remote.getCurrentWindow();
+					win.toggleDevTools();
+					break;
 			}
 		} );
 	},
@@ -339,7 +355,7 @@ Einblick.UI = {
 	 * @param {Einblick.UI.PAGE_MODE} mode Page mode.
 	 */
 	changePageMode: function( mode ) {
-		if( this.mode === mode ) {
+		if( !Einblick.doc || this.mode === mode ) {
 			return;
 		}
 
@@ -481,6 +497,30 @@ Einblick.UI = {
 		}
 
 		cb && cb();
+	},
+
+
+	/**
+	 * Check if node is some kind of input node.
+	 * @param  {DOMElement} node Node to check.
+	 * @return {Boolean}         True if is input, false otherwise.
+	 */
+	isInput: function( node ) {
+		if( !node ) {
+			return false;
+		}
+
+		var inputs = [
+			'input',
+			'textarea'
+		];
+		var tag = node.tagName.toLowerCase();
+
+		if( inputs.indexOf( tag ) >= 0 ) {
+			return true;
+		}
+
+		return false;
 	},
 
 

@@ -172,6 +172,8 @@ var Einblick = {
 	 */
 	init: function( cb ) {
 		this._loadScripts( function() {
+			PDFJS.workerSrc = 'js/pdf.worker.js';
+
 			Einblick.loadLanguage( function() {
 				Einblick.showMemoryUsage();
 				clearInterval( Einblick._intervalMemory );
@@ -181,8 +183,6 @@ var Einblick = {
 				}, 4000 );
 
 				Einblick.UI.init( function() {
-					PDFJS.workerSrc = 'js/pdf.worker.js';
-
 					var argv = electron.remote.getGlobal( 'argv' );
 					var filePath = argv['-i'];
 
