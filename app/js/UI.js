@@ -17,6 +17,37 @@ Einblick.UI = {
 
 
 	/**
+	 * Build the list items and sublists
+	 * for the sidebar content list.
+	 * @param {Object}      o     Item data.
+	 * @param {HTMLElement} $list Parent list to append the items to.
+	 */
+	_buildContentItem: function( o, $list ) {
+		if( !o ) {
+			return;
+		}
+
+		var $title = document.createElement( 'span' );
+		$title.textContent = o.title;
+
+		var $item = document.createElement( 'li' );
+		$item.appendChild( $title );
+
+		if( o.items && o.items.length > 0 ) {
+			var $sublist = document.createElement( 'ol' );
+
+			for( var i = 0; i < o.items.length; i++ ) {
+				Einblick.UI._buildContentItem( o.items[i], $sublist );
+			}
+
+			$item.appendChild( $sublist );
+		}
+
+		$list.appendChild( $item );
+	},
+
+
+	/**
 	 * Handle a general click event and
 	 * close all opened submenus and the like.
 	 * @param {MouseEvent} ev
@@ -272,10 +303,10 @@ Einblick.UI = {
 					}
 					break;
 
-				// F12: toggle dev tools
+				// F12: open dev tools
 				case 123:
 					var win = electron.remote.getCurrentWindow();
-					win.toggleDevTools();
+					win.openDevTools( { mode: 'undocked' } );
 					break;
 			}
 		} );
@@ -347,6 +378,27 @@ Einblick.UI = {
 
 			$list.appendChild( $item );
 		}
+	},
+
+
+	/**
+	 * Build the sidebar content list.
+	 */
+	buildContentList: function() {
+		if( !Einblick.doc ) {
+			return;
+		}
+
+		var promise = Einblick.doc.getOutline();
+
+		promise.then( function( outline ) {
+			var $list = document.querySelector( '#sidebar .contents' );
+			$list.innerHTML = '';
+
+			for( var i = 0; i < outline.length; i++ ) {
+				Einblick.UI._buildContentItem( outline[i], $list );
+			}
+		} );
 	},
 
 

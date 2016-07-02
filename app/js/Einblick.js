@@ -198,7 +198,7 @@ var Einblick = {
 
 
 	/**
-	 * Load and open a PDF file.
+	 * Open a file.
 	 * @param {String} fp Path to the file.
 	 */
 	loadFile: function( fp ) {
@@ -217,64 +217,47 @@ var Einblick = {
 			}
 
 			Einblick.clear();
-
-			var pdfData = new Uint8Array();
-			var readStream = fs.createReadStream( fp );
-			readStream.pause();
-
-			readStream.on( 'open', function() {
-				console.log( '[Einblick.loadFile] Opened read stream for: ' + fp );
+			Einblick.UI.update( {
+				filesize: stat.size
 			} );
 
-			readStream.on( 'end', function() {
-				console.log( '[Einblick.loadFile] Closed read stream for: ' + fp );
-				load( pdfData );
-			} );
-
-			readStream.on( 'error', function( err ) {
-				console.error( '[Einblick.loadFile] ' + err.message );
-				readStream.close();
-			} );
-
-			readStream.on( 'readable', function() {
-				var chunk = readStream.read();
-
-				if( chunk === null ) {
-					return;
-				}
-
-				var dataPrev = pdfData;
-				pdfData = new Uint8Array( pdfData.length + chunk.length );
-				pdfData.set( dataPrev, 0 );
-				pdfData.set( chunk, dataPrev.length );
-			} );
-
-			var load = function( data ) {
-				PDFJS.getDocument( data ).then( function( pdf ) {
-					Einblick.doc = pdf;
-
-					pdf.getMetadata().then( function( meta ) {
-						Einblick.docMeta = meta;
-
-						if( meta && meta.info ) {
-							var $title = document.querySelector( 'title' );
-							$title.textContent = meta.info.Title;
-						}
-					} );
-
-					Einblick.UI.initPages( function() {
-						Einblick.UI.update( {
-							numPages: pdf.numPages
-						} );
-						Einblick.showPage( 1 );
-					} );
-				} );
-
-				Einblick.UI.update( {
-					filesize: stat.size
-				} );
-			};
+			Einblick.loadPDF( fp );
 		} );
+	},
+
+
+	/**
+	 * Load a PDF file.
+	 * @param {String} fp File path.
+	 */
+	loadPDF: function( fp ) {
+		var pdfLoaded = function( pdf ) {
+			Einblick.doc = pdf;
+
+			Einblick.doc.getMetadata().then( function( meta ) {
+				Einblick.docMeta = meta;
+
+				if( meta && meta.info ) {
+					var $title = document.querySelector( 'title' );
+					$title.textContent = meta.info.Title;
+				}
+			} );
+
+			Einblick.UI.initPages( function() {
+				Einblick.UI.update( {
+					numPages: Einblick.doc.numPages
+				} );
+				Einblick.showPage( 1 );
+			} );
+
+			Einblick.UI.buildContentList();
+		};
+
+		var pdfError = function( err ) {
+			console.error( '[Einblick.loadFile] ' + err.message );
+		};
+
+		PDFJS.getDocument( fp ).then( pdfLoaded, pdfError );
 	},
 
 
