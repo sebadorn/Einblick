@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Terminal=false
+Name=Einblick
+GenericName=PDF Viewer
+Icon=/usr/share/Einblick/resources/app/images/logo.png
+Exec=/usr/bin/Einblick %f
+Categories=Graphics;Office;
+MimeType=application/pdf;

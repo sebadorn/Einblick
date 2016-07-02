@@ -13,5 +13,5 @@ cd ..
 cp pdf.js/build/generic/build/pdf.js app/js/
 cp pdf.js/build/generic/build/pdf.worker.js app/js/
 
-chmod +x build.sh
+chmod +x build_linux.sh
 chmod +x run.sh

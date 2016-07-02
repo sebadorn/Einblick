@@ -218,29 +218,62 @@ var Einblick = {
 
 			Einblick.clear();
 
-			PDFJS.getDocument( fp ).then( function( pdf ) {
-				Einblick.doc = pdf;
+			var pdfData = new Uint8Array();
+			var readStream = fs.createReadStream( fp );
+			readStream.pause();
 
-				pdf.getMetadata().then( function( meta ) {
-					Einblick.docMeta = meta;
+			readStream.on( 'open', function() {
+				console.log( '[Einblick.loadFile] Opened read stream for: ' + fp );
+			} );
 
-					if( meta && meta.info ) {
-						var $title = document.querySelector( 'title' );
-						$title.textContent = meta.info.Title;
-					}
-				} );
+			readStream.on( 'end', function() {
+				console.log( '[Einblick.loadFile] Closed read stream for: ' + fp );
+				load( pdfData );
+			} );
 
-				Einblick.UI.initPages( function() {
-					Einblick.UI.update( {
-						numPages: pdf.numPages
+			readStream.on( 'error', function( err ) {
+				console.error( '[Einblick.loadFile] ' + err.message );
+				readStream.close();
+			} );
+
+			readStream.on( 'readable', function() {
+				var chunk = readStream.read();
+
+				if( chunk === null ) {
+					return;
+				}
+
+				var dataPrev = pdfData;
+				pdfData = new Uint8Array( pdfData.length + chunk.length );
+				pdfData.set( dataPrev, 0 );
+				pdfData.set( chunk, dataPrev.length );
+			} );
+
+			var load = function( data ) {
+				PDFJS.getDocument( data ).then( function( pdf ) {
+					Einblick.doc = pdf;
+
+					pdf.getMetadata().then( function( meta ) {
+						Einblick.docMeta = meta;
+
+						if( meta && meta.info ) {
+							var $title = document.querySelector( 'title' );
+							$title.textContent = meta.info.Title;
+						}
 					} );
-					Einblick.showPage( 1 );
-				} );
-			} );
 
-			Einblick.UI.update( {
-				filesize: stat.size
-			} );
+					Einblick.UI.initPages( function() {
+						Einblick.UI.update( {
+							numPages: pdf.numPages
+						} );
+						Einblick.showPage( 1 );
+					} );
+				} );
+
+				Einblick.UI.update( {
+					filesize: stat.size
+				} );
+			};
 		} );
 	},
 

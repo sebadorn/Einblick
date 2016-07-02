@@ -1,4 +1,5 @@
 # Directories
+build/
 electron/
 pdf.js/
 
