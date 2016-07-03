@@ -27,6 +27,8 @@ Einblick.UI = {
 			return;
 		}
 
+		// TODO: o.dest -> dest = doc.getDestination(o.dest) -> doc.getPageIndex(dest.ref)
+
 		var $title = document.createElement( 'span' );
 		$title.textContent = o.title;
 
@@ -35,6 +37,7 @@ Einblick.UI = {
 
 		if( o.items && o.items.length > 0 ) {
 			var $sublist = document.createElement( 'ol' );
+			$sublist.className = 'sublist';
 
 			for( var i = 0; i < o.items.length; i++ ) {
 				Einblick.UI._buildContentItem( o.items[i], $sublist );
@@ -344,13 +347,28 @@ Einblick.UI = {
 			},
 			{
 				cls: 'zoom',
+				text: Einblick.t( '75%' ),
+				value: 0.75
+			},
+			{
+				cls: 'zoom',
 				text: Einblick.t( '100%' ),
 				value: 1.0
 			},
 			{
 				cls: 'zoom',
+				text: Einblick.t( '125%' ),
+				value: 1.25
+			},
+			{
+				cls: 'zoom',
 				text: Einblick.t( '150%' ),
 				value: 1.5
+			},
+			{
+				cls: 'zoom',
+				text: Einblick.t( '175%' ),
+				value: 1.75
 			},
 			{
 				cls: 'zoom',
