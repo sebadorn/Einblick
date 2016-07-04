@@ -8,6 +8,7 @@ var Einblick = {
 	doc: null,
 	docMeta: null,
 	pages: {},
+	toc: {},
 
 	_intervalMemory: 0,
 	_pageHistory: [],
@@ -121,6 +122,55 @@ var Einblick = {
 
 
 	/**
+	 * Build the table of contents structure,
+	 * associating the destinations from the outline
+	 * with actual page indices.
+	 * @param {Function} cb Callback.
+	 */
+	buildTOC: function( cb ) {
+		if( !this.doc ) {
+			cb && cb();
+			return;
+		}
+
+		this.toc = {};
+
+		var fnGetNext = function( outline, i ) {
+			if( i >= outline.length ) {
+				cb && cb();
+				return;
+			}
+
+			var o = outline[i];
+			var destPromise = Einblick.doc.getDestination( o.dest );
+
+			destPromise.then( function( dest ) {
+				var indexPromise = Einblick.doc.getPageIndex( dest[0] );
+
+				indexPromise.then( function( index ) {
+					// Index is given zero-based,
+					// but we use them 1-based.
+					index++;
+
+					Einblick.toc[o.dest] = {
+						pageIndex: index,
+						title: o.title
+					};
+
+					fnGetNext( outline, i + 1 );
+				} );
+			} );
+		};
+
+		var promise = Einblick.doc.getOutline();
+
+		promise.then( function( outline ) {
+			fnGetNext( outline, 0 );
+		} );
+	},
+
+
+	/**
 	 * Clear the old document to
 	 * prepare for a new one.
 	 */
@@ -136,6 +186,7 @@ var Einblick = {
 		this.doc = null;
 		this.docMeta = null;
 		this.pages = {};
+		this.toc = {};
 	},
 
 
@@ -250,7 +301,9 @@ var Einblick = {
 				Einblick.showPage( 1 );
 			} );
 
-			Einblick.UI.buildContentList();
+			Einblick.buildTOC( function() {
+				Einblick.UI.buildContentList();
+			} );
 		};
 
 		var pdfError = function( err ) {

@@ -24,10 +24,8 @@ Einblick.UI = {
 	 */
 	_buildContentItem: function( o, $list ) {
 		if( !o ) {
-			return;
+			return null;
 		}
-
-		// TODO: o.dest -> dest = doc.getDestination(o.dest) -> doc.getPageIndex(dest.ref)
 
 		var $title = document.createElement( 'span' );
 		$title.textContent = o.title;
@@ -35,18 +33,21 @@ Einblick.UI = {
 		var $item = document.createElement( 'li' );
 		$item.appendChild( $title );
 
-		if( o.items && o.items.length > 0 ) {
-			var $sublist = document.createElement( 'ol' );
-			$sublist.className = 'sublist';
+		// if( o.items && o.items.length > 0 ) {
+		// 	var $sublist = document.createElement( 'ol' );
+		// 	$sublist.className = 'sublist';
 
-			for( var i = 0; i < o.items.length; i++ ) {
-				Einblick.UI._buildContentItem( o.items[i], $sublist );
-			}
+		// 	for( var i = 0; i < o.items.length; i++ ) {
+		// 		Einblick.UI._buildContentItem( o.items[i], $sublist );
+		// 	}
 
-			$item.appendChild( $sublist );
-		}
+		// 	$item.appendChild( $sublist );
+		// }
 
-		$list.appendChild( $item );
+		$title.setAttribute( 'data-page', o.pageIndex );
+		$title.addEventListener( 'click', this._showSelectedContentItem );
+
+		return $item;
 	},
 
 
@@ -400,6 +401,22 @@ Einblick.UI = {
 
 
 	/**
+	 * For the selected content item (sidebar toc),
+	 * load the page and scroll to it.
+	 * @param {Event} ev
+	 */
+	_showSelectedContentItem: function( ev ) {
+		var $item = ev.currentTarget || ev.target;
+		var index = $item.getAttribute( 'data-page' );
+		index = Number( index );
+
+		Einblick.showPage( index, function() {
+			Einblick.UI.scrollToPage( index );
+		} );
+	},
+
+
+	/**
 	 * Build the sidebar content list.
 	 */
 	buildContentList: function() {
@@ -407,16 +424,23 @@ Einblick.UI = {
 			return;
 		}
 
-		var promise = Einblick.doc.getOutline();
+		var $list = document.querySelector( '#sidebar .contents' );
+		$list.innerHTML = '';
 
-		promise.then( function( outline ) {
-			var $list = document.querySelector( '#sidebar .contents' );
-			$list.innerHTML = '';
+		var tocList = [];
 
-			for( var i = 0; i < outline.length; i++ ) {
-				Einblick.UI._buildContentItem( outline[i], $list );
-			}
+		for( var key in Einblick.toc ) {
+			tocList.push( Einblick.toc[key] );
+		}
+
+		tocList.sort( function( a, b ) {
+			return ( a.pageIndex > b.pageIndex );
 		} );
+
+		for( var i = 0; i < tocList.length; i++ ) {
+			var $item = Einblick.UI._buildContentItem( tocList[i], $list );
+			$list.appendChild( $item );
+		}
 	},
 
 
