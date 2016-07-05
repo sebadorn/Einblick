@@ -19,10 +19,10 @@ Einblick.UI = {
 	/**
 	 * Build the list items and sublists
 	 * for the sidebar content list.
-	 * @param {Object}      o     Item data.
-	 * @param {HTMLElement} $list Parent list to append the items to.
+	 * @param  {Object}      o Item data.
+	 * @return {HTMLElement}   List element.
 	 */
-	_buildContentItem: function( o, $list ) {
+	_buildContentItem: function( o ) {
 		if( !o ) {
 			return null;
 		}
@@ -33,16 +33,27 @@ Einblick.UI = {
 		var $item = document.createElement( 'li' );
 		$item.appendChild( $title );
 
-		// if( o.items && o.items.length > 0 ) {
-		// 	var $sublist = document.createElement( 'ol' );
-		// 	$sublist.className = 'sublist';
+		if( o.items ) {
+			var tocList = [];
 
-		// 	for( var i = 0; i < o.items.length; i++ ) {
-		// 		Einblick.UI._buildContentItem( o.items[i], $sublist );
-		// 	}
+			for( var key in o.items ) {
+				tocList.push( o.items[key] );
+			}
 
-		// 	$item.appendChild( $sublist );
-		// }
+			tocList.sort( function( a, b ) {
+				return ( a.pageIndex > b.pageIndex );
+			} );
+
+			var $sublist = document.createElement( 'ol' );
+			$sublist.className = 'sublist';
+
+			for( var i = 0; i < tocList.length; i++ ) {
+				var $subitem = Einblick.UI._buildContentItem( tocList[i] );
+				$sublist.appendChild( $subitem );
+			}
+
+			$item.appendChild( $sublist );
+		}
 
 		$title.setAttribute( 'data-page', o.pageIndex );
 		$title.addEventListener( 'click', this._showSelectedContentItem );
@@ -438,7 +449,7 @@ Einblick.UI = {
 		} );
 
 		for( var i = 0; i < tocList.length; i++ ) {
-			var $item = Einblick.UI._buildContentItem( tocList[i], $list );
+			var $item = Einblick.UI._buildContentItem( tocList[i] );
 			$list.appendChild( $item );
 		}
 	},

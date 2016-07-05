@@ -125,15 +125,15 @@ var Einblick = {
 	 * Build the table of contents structure,
 	 * associating the destinations from the outline
 	 * with actual page indices.
-	 * @param {Function} cb Callback.
+	 * @param {Object}        parent
+	 * @param {Array<Object>} outline
+	 * @param {Function}      cb Callback.
 	 */
-	buildTOC: function( cb ) {
+	buildTOC: function( parent, outline, cb ) {
 		if( !this.doc ) {
 			cb && cb();
 			return;
 		}
-
-		this.toc = {};
 
 		var fnGetNext = function( outline, i ) {
 			if( i >= outline.length ) {
@@ -152,21 +152,26 @@ var Einblick = {
 					// but we use them 1-based.
 					index++;
 
-					Einblick.toc[o.dest] = {
+					parent[o.dest] = {
 						pageIndex: index,
 						title: o.title
 					};
 
-					fnGetNext( outline, i + 1 );
+					if( o.items && o.items.length > 0 ) {
+						parent[o.dest].items = {};
+
+						Einblick.buildTOC( parent[o.dest].items, o.items, function() {
+							fnGetNext( outline, i + 1 );
+						} );
+					}
+					else {
+						fnGetNext( outline, i + 1 );
+					}
 				} );
 			} );
 		};
 
-		var promise = Einblick.doc.getOutline();
-
-		promise.then( function( outline ) {
-			fnGetNext( outline, 0 );
-		} );
+		fnGetNext( outline, 0 );
 	},
 
 
@@ -301,8 +306,13 @@ var Einblick = {
 				Einblick.showPage( 1 );
 			} );
 
-			Einblick.buildTOC( function() {
-				Einblick.UI.buildContentList();
+			Einblick.toc = {};
+			var promise = Einblick.doc.getOutline();
+
+			promise.then( function( outline ) {
+				Einblick.buildTOC( Einblick.toc, outline, function() {
+					Einblick.UI.buildContentList();
+				} );
 			} );
 		};
 
