@@ -266,6 +266,9 @@ Einblick.UI = {
 	 * Initialize the header.
 	 */
 	_initHeader: function() {
+		var $btnSidebar = document.querySelector( '#toggle-sidebar' );
+		$btnSidebar.addEventListener( 'click', this._toggleSidebar.bind( this ) );
+
 		var $btnOpenFile = document.querySelector( '#open-file' );
 		$btnOpenFile.addEventListener( 'click', this._handleOpenFile.bind( this ) );
 
@@ -455,6 +458,25 @@ Einblick.UI = {
 		}
 
 		$item.className = clsArr.join( ' ' );
+	},
+
+
+	/**
+	 * Toggle the sidebar.
+	 * @param {MouseEvent} ev
+	 */
+	_toggleSidebar: function( ev ) {
+		var $arrow = ev.target;
+		var $sb = document.querySelector( '#sidebar' );
+
+		if( $sb.className == 'extended' ) {
+			$sb.className = '';
+			$arrow.className = $arrow.className.replace( '-left', '-right' );
+		}
+		else {
+			$sb.className = 'extended';
+			$arrow.className = $arrow.className.replace( '-right', '-left' );
+		}
 	},
 
 
