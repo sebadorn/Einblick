@@ -27,10 +27,15 @@ Einblick.UI = {
 			return null;
 		}
 
+		var $arrow = document.createElement( 'span' );
+		$arrow.className = 'toggle';
+
 		var $title = document.createElement( 'span' );
+		$title.className = 'title';
 		$title.textContent = o.title;
 
 		var $item = document.createElement( 'li' );
+		$item.appendChild( $arrow );
 		$item.appendChild( $title );
 
 		if( o.items ) {
@@ -51,6 +56,9 @@ Einblick.UI = {
 				var $subitem = Einblick.UI._buildContentItem( tocList[i] );
 				$sublist.appendChild( $subitem );
 			}
+
+			$arrow.className += ' fa fa-caret-right';
+			$arrow.addEventListener( 'mouseup', Einblick.UI._toggleListTOC );
 
 			$item.appendChild( $sublist );
 		}
@@ -424,6 +432,29 @@ Einblick.UI = {
 		Einblick.showPage( index, function() {
 			Einblick.UI.scrollToPage( index );
 		} );
+	},
+
+
+	/**
+	 * Toggle the visibility of a TOC sublist.
+	 * @param {MouseEvent} ev
+	 */
+	_toggleListTOC: function( ev ) {
+		var $arrow = ev.currentTarget || ev.target;
+		var $item = $arrow.parentNode;
+		var clsArr = $item.className.split( ' ' );
+		var pos = clsArr.indexOf( 'extended' );
+
+		if( pos >= 0 ) {
+			$arrow.className = $arrow.className.replace( 'caret-down', 'caret-right' );
+			clsArr.splice( pos, 1 );
+		}
+		else {
+			$arrow.className = $arrow.className.replace( 'caret-right', 'caret-down' );
+			clsArr.push( 'extended' );
+		}
+
+		$item.className = clsArr.join( ' ' );
 	},
 
 
