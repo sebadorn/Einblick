@@ -127,13 +127,16 @@ var Einblick = {
 	 * with actual page indices.
 	 * @param {Object}        parent
 	 * @param {Array<Object>} outline
+	 * @param {Array<String>} labels
 	 * @param {Function}      cb Callback.
 	 */
-	buildTOC: function( parent, outline, cb ) {
+	buildTOC: function( parent, outline, labels, cb ) {
 		if( !this.doc ) {
 			cb && cb();
 			return;
 		}
+
+		labels = labels || [];
 
 		var fnGetNext = function( outline, i ) {
 			if( i >= outline.length ) {
@@ -154,15 +157,18 @@ var Einblick = {
 
 					parent[o.dest] = {
 						pageIndex: index,
-						title: o.title
+						title: o.title,
+						label: labels[index - 1]
 					};
 
 					if( o.items && o.items.length > 0 ) {
 						parent[o.dest].items = {};
-
-						Einblick.buildTOC( parent[o.dest].items, o.items, function() {
+						var items = parent[o.dest].items;
+						var cbNext = function() {
 							fnGetNext( outline, i + 1 );
-						} );
+						};
+
+						Einblick.buildTOC( items, o.items, labels, cbNext );
 					}
 					else {
 						fnGetNext( outline, i + 1 );
@@ -310,8 +316,10 @@ var Einblick = {
 			var promise = Einblick.doc.getOutline();
 
 			promise.then( function( outline ) {
-				Einblick.buildTOC( Einblick.toc, outline, function() {
-					Einblick.UI.buildContentList();
+				Einblick.doc.getPageLabels().then( function( labels ) {
+					Einblick.buildTOC( Einblick.toc, outline, labels, function() {
+						Einblick.UI.buildContentList();
+					} );
 				} );
 			} );
 		};

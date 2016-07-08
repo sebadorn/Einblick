@@ -178,12 +178,19 @@ header {
 }
 
 	#sidebar {
+		background-clip: content-box;
 		background-color: #2D2D2D;
+		border: 1px solid transparent;
+		border-left: 0;
+		border-right: 0;
 		box-sizing: border-box;
 		display: none;
 		max-height: 100%;
+		max-width: 240px;
 		min-height: 100%;
-		overflow: auto;
+		overflow-x: hidden;
+		overflow-y: auto;
+		white-space: nowrap;
 	}
 
 	#sidebar.extended {
@@ -196,6 +203,7 @@ header {
 		}
 
 			#sidebar .contents li {
+				clear: both;
 				padding: 4px 0;
 			}
 
@@ -203,23 +211,43 @@ header {
 				padding-bottom: 0;
 			}
 
+				#sidebar .contents .wrap {
+					align-items: center;
+					display: flex;
+				}
+
 				#sidebar .extended > .sublist {
 					display: block;
 				}
 
-				#sidebar .contents .toggle {
+				#sidebar .toggle {
+					flex-grow: 0;
+					flex-shrink: 0;
 					text-align: center;
 					width: 20px;
 				}
 
-				#sidebar .contents .title:hover,
-				#sidebar .contents .toggle:hover {
+				#sidebar .title {
+					flex-grow: 2;
+					overflow: hidden;
+					text-overflow: ellipsis;
+				}
+
+				#sidebar .title:hover,
+				#sidebar .toggle:hover {
 					color: #5d99e4;
+				}
+
+				#sidebar .label {
+					flex-grow: 0;
+					flex-shrink: 0;
+					margin-left: 10px;
+					opacity: 0.6;
 				}
 
 				#sidebar .sublist {
 					display: none;
-					padding: 2px 14px 0;
+					padding: 2px 0 0 14px;
 				}
 
 	.canvas-wrap {

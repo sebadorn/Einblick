@@ -34,9 +34,18 @@ Einblick.UI = {
 		$title.className = 'title';
 		$title.textContent = o.title;
 
+		var $label = document.createElement( 'span' );
+		$label.className = 'label';
+		$label.textContent = o.label || '';
+
+		var $wrap = document.createElement( 'div' );
+		$wrap.className = 'wrap';
+		$wrap.appendChild( $arrow );
+		$wrap.appendChild( $title );
+		$wrap.appendChild( $label );
+
 		var $item = document.createElement( 'li' );
-		$item.appendChild( $arrow );
-		$item.appendChild( $title );
+		$item.appendChild( $wrap );
 
 		if( o.items ) {
 			var tocList = [];
@@ -444,7 +453,7 @@ Einblick.UI = {
 	 */
 	_toggleListTOC: function( ev ) {
 		var $arrow = ev.currentTarget || ev.target;
-		var $item = $arrow.parentNode;
+		var $item = $arrow.parentNode.parentNode;
 		var clsArr = $item.className.split( ' ' );
 		var pos = clsArr.indexOf( 'extended' );
 
