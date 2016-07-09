@@ -475,6 +475,10 @@ Einblick.UI = {
 	 * @param {MouseEvent} ev
 	 */
 	_toggleSidebar: function( ev ) {
+		if( !Einblick.doc ) {
+			return;
+		}
+
 		var $arrow = ev.target;
 		var $sb = document.querySelector( '#sidebar' );
 
@@ -640,6 +644,10 @@ Einblick.UI = {
 		var $body = document.body;
 		$body.addEventListener( 'click', this._closeAll.bind( this ) );
 
+		this.translate(
+			document.querySelectorAll( '[data-trans]' )
+		);
+
 		cb && cb();
 	},
 
@@ -669,11 +677,11 @@ Einblick.UI = {
 
 	/**
 	 * Check if node is some kind of input node.
-	 * @param  {DOMElement} node Node to check.
-	 * @return {Boolean}         True if is input, false otherwise.
+	 * @param  {HTMLElement} $node Node to check.
+	 * @return {Boolean}           True if is input, false otherwise.
 	 */
-	isInput: function( node ) {
-		if( !node ) {
+	isInput: function( $node ) {
+		if( !$node ) {
 			return false;
 		}
 
@@ -681,7 +689,7 @@ Einblick.UI = {
 			'input',
 			'textarea'
 		];
-		var tag = node.tagName.toLowerCase();
+		var tag = $node.tagName.toLowerCase();
 
 		if( inputs.indexOf( tag ) >= 0 ) {
 			return true;
@@ -720,6 +728,35 @@ Einblick.UI = {
 		for( var i = 0; i < $cs.length; i++ ) {
 			$cs[i].style.display = '';
 		}
+	},
+
+
+	/**
+	 * Set the translated text for a given node.
+	 * @param {HTMLElement|Array<HTMLElement>} $node
+	 */
+	translate: function( $node ) {
+		if( !$node ) {
+			return;
+		}
+
+		if( Array.isArray( $node ) || $node instanceof NodeList ) {
+			for( var i = 0; i < $node.length; i++ ) {
+				Einblick.UI.translate( $node[i] );
+			}
+
+			return;
+		}
+
+		var key = $node.getAttribute( 'data-trans' );
+
+		if( !key ) {
+			return;
+		}
+
+		var text = Einblick.t( key );
+
+		$node.innerHTML = text;
 	},
 
 

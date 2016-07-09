@@ -1,5 +1,7 @@
 {
+	"content": "Content",
 	"fitToWidth": "Fit to width",
 	"layoutContinuous": "Continuous",
-	"layoutSinglePage": "Single page"
+	"layoutSinglePage": "Single page",
+	"preview": "Preview"
 }

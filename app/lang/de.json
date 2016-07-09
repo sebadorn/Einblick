@@ -1,5 +1,7 @@
 {
+	"content": "Inhalt",
 	"fitToWidth": "An Breite anpassen",
 	"layoutContinuous": "Fortlaufend",
-	"layoutSinglePage": "Einzelseite"
+	"layoutSinglePage": "Einzelseite",
+	"preview": "Vorschau"
 }
