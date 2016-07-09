@@ -43,8 +43,8 @@ fi
 printf "  1. Moving files to /usr/share/Einblick/ ..."
 mkdir -p /usr/share/Einblick
 cp -R ../Einblick /usr/share/
-chmod 0755 /usr/bin/Einblick/resources
-chmod 0755 /usr/bin/Einblick/locales
+chmod 0755 /usr/share/Einblick/resources
+chmod 0755 /usr/share/Einblick/locales
 echo " Done."
 
 printf "  2. Create executable in /usr/bin/Einblick ..."

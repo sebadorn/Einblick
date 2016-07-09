@@ -39,7 +39,9 @@ rm /usr/share/applications/Einblick.desktop
 echo " Done."
 
 printf "  4. Removing electron data in $HOME/.config/$PROJECT_NAME ..."
-rm -r "$HOME/.config/$PROJECT_NAME"
+if [ -d "$HOME/.config/$PROJECT_NAME" ]; then
+	rm -r "$HOME/.config/$PROJECT_NAME"
+fi
 echo " Done."
 
 echo "  ---------------------------------------"
