@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 BUILD_DIR=./build/linux
-ELECTRON=./electron/electron-v1.2.5-linux-x64
+ELECTRON=./electron/electron-v1.2.7-linux-x64
 PLATFORM=linux
 PROJECT_NAME=Einblick
 
