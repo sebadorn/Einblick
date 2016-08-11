@@ -8,6 +8,7 @@ var Einblick = {
 	doc: null,
 	docMeta: null,
 	pages: {},
+	pageTexts: {},
 	toc: {},
 
 	_intervalMemory: 0,
@@ -16,6 +17,22 @@ var Einblick = {
 		'UI.js'
 	],
 	_texts: null,
+
+
+	/**
+	 * Load the data for the TOC.
+	 * @param {Function} cb Callback.
+	 */
+	_loadDataForTOC: function( cb ) {
+		Einblick.toc = {};
+		var promise = Einblick.doc.getOutline();
+
+		promise.then( function( outline ) {
+			Einblick.doc.getPageLabels().then( function( labels ) {
+				cb && cb( outline, labels );
+			} );
+		} );
+	},
 
 
 	/**
@@ -289,6 +306,31 @@ var Einblick = {
 
 
 	/**
+	 * Load all the page texts.
+	 * @param {Function} cb Callback.
+	 */
+	loadPageTexts: function( cb ) {
+		Einblick.pageTexts = {};
+
+		var loadNext = function( i ) {
+			if( i > Einblick.doc.numPages ) {
+				cb && cb();
+				return;
+			}
+
+			Einblick.doc.getPage( i ).then( function( page ) {
+				page.getTextContent().then( function( tc ) {
+					Einblick.pageTexts[page.pageIndex] = tc;
+					loadNext( i + 1 );
+				} );
+			} );
+		};
+
+		loadNext( 1 );
+	},
+
+
+	/**
 	 * Load a PDF file.
 	 * @param {String} fp File path.
 	 */
@@ -312,16 +354,13 @@ var Einblick = {
 				Einblick.showPage( 1 );
 			} );
 
-			Einblick.toc = {};
-			var promise = Einblick.doc.getOutline();
-
-			promise.then( function( outline ) {
-				Einblick.doc.getPageLabels().then( function( labels ) {
-					Einblick.buildTOC( Einblick.toc, outline, labels, function() {
-						Einblick.UI.buildContentList();
-					} );
+			Einblick._loadDataForTOC( function( outline, labels ) {
+				Einblick.buildTOC( Einblick.toc, outline, labels, function() {
+					Einblick.UI.buildContentList();
 				} );
 			} );
+
+			Einblick.loadPageTexts();
 		};
 
 		var pdfError = function( err ) {
