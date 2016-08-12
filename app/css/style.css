@@ -2,7 +2,6 @@
 	margin: 0;
 	outline: none;
 	padding: 0;
-	-webkit-user-select: none;
 }
 
 ::selection {
@@ -42,6 +41,7 @@
 
 html, body {
 	height: 100%;
+	-webkit-user-select: none;
 }
 
 body {
@@ -79,12 +79,6 @@ button:hover {
 
 canvas {
 	background-color: rgba( 255, 255, 255, 0.1 );
-	display: block;
-	margin: 0 auto 4px;
-}
-
-canvas:last-child {
-	margin-bottom: 0;
 }
 
 code,
@@ -274,6 +268,29 @@ header {
 		padding: 20px 0;
 		text-align: center;
 	}
+
+	.page-wrap {
+		margin: 0 auto 4px;
+		position: relative;
+	}
+
+	.page-wrap:last-child {
+		margin-bottom: 0;
+	}
+
+		.page-text {
+			color: #000000;
+			left: 0;
+			position: absolute;
+			top: 0;
+			-webkit-user-select: all !important;
+			width: 100%;
+			z-index: 10;
+		}
+
+			.page-text div {
+				position: absolute;
+			}
 
 
 footer {

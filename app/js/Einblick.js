@@ -88,50 +88,19 @@ var Einblick = {
 			return;
 		}
 
-
-		var $cw = document.querySelector( '.canvas-wrap' );
-
 		for( var pageIndex in Einblick.UI.canvases ) {
-			var c = Einblick.UI.canvases[pageIndex];
-
-			if( !c.loaded ) {
-				continue;
-			}
-
 			// Moving down.
 			if( trend >= unloadThreshold ) {
 				// Unload earlier pages.
 				if( current - pageIndex >= minPageDistance ) {
-					this.pages[pageIndex].cleanup();
-					delete this.pages[pageIndex];
-
-					var $newCanvas = document.createElement( 'canvas' );
-					$newCanvas.id = c.canvas.id;
-					$newCanvas.style = c.canvas.style;
-					$newCanvas.width = c.canvas.width;
-					$newCanvas.height = c.canvas.height;
-					$cw.replaceChild( $newCanvas, c.canvas );
-
-					c.canvas = $newCanvas;
-					c.loaded = false;
+					this.unloadPage( pageIndex );
 				}
 			}
 			// Moving up.
 			else if( trend <= -unloadThreshold ) {
 				// Unload later pages.
 				if( pageIndex - current >= minPageDistance ) {
-					this.pages[pageIndex].cleanup();
-					delete this.pages[pageIndex];
-
-					var $newCanvas = document.createElement( 'canvas' );
-					$newCanvas.id = c.canvas.id;
-					$newCanvas.style = c.canvas.style;
-					$newCanvas.width = c.canvas.width;
-					$newCanvas.height = c.canvas.height;
-					$cw.replaceChild( $newCanvas, c.canvas );
-
-					c.canvas = $newCanvas;
-					c.loaded = false;
+					this.unloadPage( pageIndex );
 				}
 			}
 		}
@@ -320,7 +289,9 @@ var Einblick = {
 
 			Einblick.doc.getPage( i ).then( function( page ) {
 				page.getTextContent().then( function( tc ) {
-					Einblick.pageTexts[page.pageIndex] = tc;
+					var index = page.pageIndex + 1;
+					Einblick.pageTexts[index] = tc;
+
 					loadNext( i + 1 );
 				} );
 			} );
@@ -347,11 +318,14 @@ var Einblick = {
 				}
 			} );
 
-			Einblick.UI.initPages( function() {
-				Einblick.UI.update( {
-					numPages: Einblick.doc.numPages
+			Einblick.loadPageTexts( function() {
+				Einblick.UI.initPages( function() {
+					Einblick.UI.update( {
+						numPages: Einblick.doc.numPages
+					} );
+
+					Einblick.showPage( 1 );
 				} );
-				Einblick.showPage( 1 );
 			} );
 
 			Einblick._loadDataForTOC( function( outline, labels ) {
@@ -359,8 +333,6 @@ var Einblick = {
 					Einblick.UI.buildContentList();
 				} );
 			} );
-
-			Einblick.loadPageTexts();
 		};
 
 		var pdfError = function( err ) {
@@ -455,6 +427,32 @@ var Einblick = {
 
 
 	/**
+	 * Render the text layer.
+	 * @param {Number} index Page index.
+	 */
+	renderTextLayer: function( index ) {
+		var c = Einblick.UI.canvases[index];
+		var pt = Einblick.pageTexts[index];
+		var page = Einblick.pages[index];
+
+		if( !c || !pt || !page || c.text ) {
+			return;
+		}
+
+		c.text = document.createElement( 'div' );
+		c.text.className = 'page-text';
+		c.page.appendChild( c.text );
+
+		PDFJS.renderTextLayer( {
+			textContent: pt,
+			container: c.text,
+			viewport: page.getViewport( Einblick.UI.zoom ),
+			textDivs: []
+		} );
+	},
+
+
+	/**
 	 * Set the zoom.
 	 * @param  {Number} zoom      Zoom. 1.0 => 100%.
 	 * @param  {Number} pageIndex The page index.
@@ -486,6 +484,9 @@ var Einblick = {
 		c.height = vp.height;
 		c.style.width = c.width + 'px';
 		c.style.height = c.height + 'px';
+
+		cData.page.style.width = c.style.width;
+		cData.page.style.height = c.style.height;
 
 		page.render( {
 			canvasContext: c.getContext( '2d' ),
@@ -594,6 +595,8 @@ var Einblick = {
 					} );
 				}
 
+				Einblick.renderTextLayer( index );
+
 				cb && cb();
 			} );
 		}
@@ -623,6 +626,7 @@ var Einblick = {
 				var indexPrev = page.pageIndex + 1;
 				Einblick.pages[indexPrev] = page;
 				Einblick.setZoom( UI.zoom, indexPrev );
+				Einblick.renderTextLayer( indexPrev );
 			} );
 		}
 
@@ -645,6 +649,7 @@ var Einblick = {
 				var indexNext = page.pageIndex + 1;
 				Einblick.pages[indexNext] = page;
 				Einblick.setZoom( UI.zoom, indexNext );
+				Einblick.renderTextLayer( indexNext );
 			} );
 		}
 
@@ -660,6 +665,31 @@ var Einblick = {
 	 */
 	t: function( key ) {
 		return Einblick._texts[key] || key;
+	},
+
+
+	/**
+	 * Unload a page.
+	 * @param {Number} index Page index.
+	 */
+	unloadPage: function( index ) {
+		var c = Einblick.UI.canvases[index];
+
+		if( !c || !this.pages[index] ) {
+			return;
+		}
+
+		this.pages[index].cleanup();
+		delete this.pages[index];
+
+		var $newCanvas = document.createElement( 'canvas' );
+		$newCanvas.style = c.canvas.style;
+		$newCanvas.width = c.canvas.width;
+		$newCanvas.height = c.canvas.height;
+		c.page.replaceChild( $newCanvas, c.canvas );
+
+		c.canvas = $newCanvas;
+		c.loaded = false;
 	}
 
 

@@ -661,13 +661,20 @@ Einblick.UI = {
 		this.canvases = {};
 
 		for( var i = 1; i <= Einblick.doc.numPages; i++ ) {
+			var $page = document.createElement( 'div' );
+			$page.className = 'page-wrap';
+			$page.id = 'pdf-page-' + i;
+
 			var $canvas = document.createElement( 'canvas' );
-			$canvas.id = 'pdf-page-' + i;
-			$cWrap.appendChild( $canvas );
+
+			$page.appendChild( $canvas );
+			$cWrap.appendChild( $page );
 
 			this.canvases[i] = {
 				canvas: $canvas,
-				loaded: false
+				loaded: false,
+				page: $page,
+				text: null
 			};
 		}
 
