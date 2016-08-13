@@ -125,7 +125,7 @@ var Einblick = {
 		labels = labels || [];
 
 		var fnGetNext = function( outline, i ) {
-			if( i >= outline.length ) {
+			if( !outline || i >= outline.length ) {
 				cb && cb();
 				return;
 			}
@@ -134,6 +134,11 @@ var Einblick = {
 			var destPromise = Einblick.doc.getDestination( o.dest );
 
 			destPromise.then( function( dest ) {
+				if( !dest || !dest[0] ) {
+					fnGetNext( outline, i + 1 );
+					return;
+				}
+
 				var indexPromise = Einblick.doc.getPageIndex( dest[0] );
 
 				indexPromise.then( function( index ) {
@@ -523,6 +528,9 @@ var Einblick = {
 			c.height = vp.height;
 			c.style.width = c.width + 'px';
 			c.style.height = c.height + 'px';
+
+			cData.page.style.width = c.style.width;
+			cData.page.style.height = c.style.height;
 
 			page.render( {
 				canvasContext: c.getContext( '2d' ),

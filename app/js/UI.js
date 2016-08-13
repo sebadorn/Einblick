@@ -618,10 +618,10 @@ Einblick.UI = {
 	 * Hide all canvases.
 	 */
 	hideAllCanvases: function() {
-		var $cs = document.querySelectorAll( '.canvas-wrap canvas' );
+		var $pw = document.querySelectorAll( '.canvas-wrap .page-wrap' );
 
-		for( var i = 0; i < $cs.length; i++ ) {
-			$cs[i].style.display = 'none';
+		for( var i = 0; i < $pw.length; i++ ) {
+			$pw[i].style.display = 'none';
 		}
 	},
 
@@ -730,10 +730,10 @@ Einblick.UI = {
 	 * Show all canvases again after having hidden them.
 	 */
 	showAllCanvases: function() {
-		var $cs = document.querySelectorAll( '.canvas-wrap canvas' );
+		var $pw = document.querySelectorAll( '.canvas-wrap .page-wrap' );
 
-		for( var i = 0; i < $cs.length; i++ ) {
-			$cs[i].style.display = '';
+		for( var i = 0; i < $pw.length; i++ ) {
+			$pw[i].style.display = '';
 		}
 	},
 

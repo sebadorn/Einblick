@@ -139,6 +139,7 @@ header {
 		position: absolute;
 		right: 18px;
 		top: 48px;
+		z-index: 200;
 	}
 
 		.zoom-options li {
@@ -279,17 +280,25 @@ header {
 	}
 
 		.page-text {
-			color: #000000;
 			left: 0;
 			position: absolute;
 			top: 0;
-			-webkit-user-select: all !important;
 			width: 100%;
 			z-index: 10;
 		}
 
 			.page-text div {
+				color: transparent;
+				cursor: text;
 				position: absolute;
+				transform-origin: 0% 0%;
+				-webkit-user-select: all;
+				white-space: pre;
+			}
+
+			.page-text div::selection {
+				background-color: rgba(56, 146, 224, 0.3);
+				color: transparent;
 			}
 
 
