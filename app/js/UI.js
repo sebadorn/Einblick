@@ -809,11 +809,16 @@ Einblick.UI = {
 				w += 'px';
 			}
 
+			var zoom = Einblick.UI.zoom;
+
 			var $style = document.querySelector( 'style#dynamic-style' );
 			$style.textContent = [
 				'.canvas-wrap canvas {',
 					'height: ' + h + ';',
 					'width: ' + w + ';',
+				'}',
+				'.page-text {',
+					'transform: scale(' + zoom + ', ' + zoom + ')',
 				'}'
 			].join( '' );
 		}
