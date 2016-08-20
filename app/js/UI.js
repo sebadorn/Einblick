@@ -13,6 +13,7 @@ Einblick.UI = {
 	mode: null,
 	zoom: 1.0,
 
+	_oldScrollTop: 0,
 	_timeoutLoadPage: 0,
 
 
@@ -157,8 +158,18 @@ Einblick.UI = {
 			return;
 		}
 
+		// Scrolled horizontally. Ignore.
+		if( ev.target.scrollTop == this._oldScrollTop ) {
+			return;
+		}
+
 		this._timeoutLoadPage = setTimeout( function() {
 			var $p = document.querySelector( '#pdf-page-1' );
+
+			if( !$p ) {
+				return;
+			}
+
 			var pStyle = window.getComputedStyle( $p );
 			var pageHeight = Number( pStyle.height.replace( 'px', '' ) );
 
@@ -169,6 +180,8 @@ Einblick.UI = {
 			Einblick.currentPageIndex = pageIndex;
 			Einblick.showPage( pageIndex );
 			Einblick.UI.update( { index: pageIndex } );
+
+			Einblick.UI._oldScrollTop = scrollTop;
 		}, 50 );
 	},
 
@@ -639,6 +652,7 @@ Einblick.UI = {
 		this._initDragAndDrop();
 
 		var $cw = document.querySelector( '.canvas-wrap' );
+		this._oldScrollTop = $cw.scrollTop;
 		$cw.addEventListener( 'scroll', this._handlePageScroll.bind( this ) );
 
 		var $body = document.body;

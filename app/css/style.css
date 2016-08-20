@@ -267,11 +267,11 @@ header {
 		flex-grow: 2;
 		overflow: auto;
 		padding: 20px 0;
-		text-align: center;
 	}
 
 	.page-wrap {
 		margin: 0 auto 4px;
+		overflow: hidden;
 		position: relative;
 	}
 
@@ -284,7 +284,6 @@ header {
 			position: absolute;
 			top: 0;
 			transform-origin: 0% 0%;
-			width: 100%;
 			z-index: 10;
 		}
 

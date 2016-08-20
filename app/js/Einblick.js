@@ -9,6 +9,7 @@ var Einblick = {
 	docMeta: null,
 	pages: {},
 	pageTexts: {},
+	searchStructure: {},
 	toc: {},
 
 	_intervalMemory: 0,
@@ -102,6 +103,36 @@ var Einblick = {
 				if( pageIndex - current >= minPageDistance ) {
 					this.unloadPage( pageIndex );
 				}
+			}
+		}
+	},
+
+
+	/**
+	 * Build the search structure.
+	 * @param {Object} pageTexts
+	 */
+	buildSearchStructure: function( pageTexts ) {
+		this.searchStructure = {};
+
+		for( var pageIndex in pageTexts ) {
+			var text = '';
+			var p = pageTexts[pageIndex];
+
+			if( !p || !p.items ) {
+				continue;
+			}
+
+			for( var i = 0; i < p.items.length; i++ ) {
+				var item = p.items[i];
+				text += item.str + ' ';
+			}
+
+			text = text.trim();
+
+			if( text.length > 0 ) {
+				var index = Number(pageIndex) + 1;
+				this.searchStructure[index] = text;
 			}
 		}
 	},
@@ -324,6 +355,8 @@ var Einblick = {
 			} );
 
 			Einblick.loadPageTexts( function() {
+				Einblick.buildSearchStructure( Einblick.pageTexts );
+
 				Einblick.UI.initPages( function() {
 					Einblick.UI.update( {
 						numPages: Einblick.doc.numPages
@@ -451,9 +484,45 @@ var Einblick = {
 		PDFJS.renderTextLayer( {
 			textContent: pt,
 			container: c.text,
-			viewport: page.getViewport( Einblick.UI.zoom ),
+			viewport: page.getViewport( 1 ),
 			textDivs: []
 		} );
+	},
+
+
+	/**
+	 * Search for the given String.
+	 * @param  {String}        str String to search.
+	 * @return {Array<Object>}     Matches found on pages.
+	 */
+	search: function( str ) {
+		var hits = [];
+
+		str = str.trim();
+
+		if( str.length === 0 ) {
+			return hits;
+		}
+
+		// Escape all special characters in the search term.
+		str = str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+		var regex = new RegExp( str, 'gi' );
+
+		for( var pageIndex in this.searchStructure ) {
+			var text = this.searchStructure[pageIndex];
+			var matches = regex.exec(text);
+
+			if( !matches ) {
+				continue;
+			}
+
+			hits.push( {
+				page: pageIndex,
+				matches: matches.length
+			} );
+		}
+
+		return hits;
 	},
 
 
