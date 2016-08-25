@@ -131,8 +131,7 @@ var Einblick = {
 			text = text.trim();
 
 			if( text.length > 0 ) {
-				var index = Number(pageIndex) + 1;
-				this.searchStructure[index] = text;
+				this.searchStructure[pageIndex] = text;
 			}
 		}
 	},
@@ -492,16 +491,19 @@ var Einblick = {
 
 	/**
 	 * Search for the given String.
-	 * @param  {String}        str String to search.
-	 * @return {Array<Object>}     Matches found on pages.
+	 * @param  {String} str String to search.
+	 * @return {Object}     Matches found on pages.
 	 */
 	search: function( str ) {
-		var hits = [];
-
 		str = str.trim();
 
+		var result = {
+			term: str,
+			matches: []
+		};
+
 		if( str.length === 0 ) {
-			return hits;
+			return result;
 		}
 
 		// Escape all special characters in the search term.
@@ -516,13 +518,13 @@ var Einblick = {
 				continue;
 			}
 
-			hits.push( {
+			result.matches.push( {
 				page: pageIndex,
-				matches: matches.length
+				numMatches: matches.length
 			} );
 		}
 
-		return hits;
+		return result;
 	},
 
 

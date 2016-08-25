@@ -129,23 +129,30 @@ header {
 		top: -1px;
 	}
 
+	.search-results,
 	.zoom-options {
 		background-color: #202020;
 		border-radius: 4px;
 		color: #F0F0F0;
 		display: none;
 		list-style: none;
-		overflow: hidden;
+		max-height: 60%;
+		min-width: 140px;
+		overflow-x: hidden;
+		overflow-y: auto;
 		position: absolute;
 		right: 18px;
 		top: 48px;
+		white-space: nowrap;
 		z-index: 200;
 	}
 
+		.search-results li,
 		.zoom-options li {
 			padding: 5px 10px;
 		}
 
+		.search-results li:hover,
 		.zoom-options li:hover {
 			background-color: #5D99E4;
 		}

@@ -86,10 +86,13 @@ Einblick.UI = {
 	 * @param {MouseEvent} ev
 	 */
 	_closeAll: function( ev ) {
-		var t = ev.target;
+		var t = ev ? ev.target : null;
 		var $laz = document.querySelector( '.layout-and-zoom' );
 
-		if( !$laz.contains( t ) ) {
+		var $sr = document.querySelector( '.search-results' );
+		$sr.style.display = 'none';
+
+		if( !t || !$laz.contains( t ) ) {
 			var $zo = document.querySelector( '.zoom-options' );
 			$zo.style.display = 'none';
 		}
@@ -183,6 +186,36 @@ Einblick.UI = {
 
 			Einblick.UI._oldScrollTop = scrollTop;
 		}, 50 );
+	},
+
+
+	/**
+	 * Handle the serch input.
+	 * @param {KeyEvent} ev
+	 */
+	_handleSearch: function( ev ) {
+		if( ev.keyCode != 13 ) {
+			return;
+		}
+
+		this._closeAll();
+
+		var text = String( ev.target.value ).trim();
+		var result = Einblick.search( text );
+
+		var $results = document.querySelector( '.search-results' );
+		$results.innerHTML = '';
+
+		for( var i = 0; i < result.matches.length; i++ ) {
+			var match = result.matches[i];
+			var $item = document.createElement( 'li' );
+			$item.setAttribute( 'data-page', match.page );
+			$item.textContent = 'page: ' + match.page;
+
+			$results.appendChild( $item );
+		}
+
+		$results.style.display = 'block';
 	},
 
 
@@ -308,6 +341,19 @@ Einblick.UI = {
 		var $inputPage = document.querySelector( '#topbar .index' );
 		$inputPage.addEventListener( 'keyup', this._handlePageIndex.bind( this ) );
 
+
+		var $inputSearch = document.querySelector( '#search-input' );
+		$inputSearch.addEventListener( 'keyup', this._handleSearch.bind( this ) );
+
+		var $results = document.querySelector( '.search-results' );
+		$results.addEventListener( 'click', function( ev ) {
+			var $item = ev.target;
+			var pageIndex = Number( $item.getAttribute( 'data-page' ) );
+
+			Einblick.showPage( pageIndex, function() {
+				Einblick.UI.scrollToPage( pageIndex );
+			} );
+		} );
 
 		this._initZoomOptions();
 
@@ -827,7 +873,7 @@ Einblick.UI = {
 
 			var $style = document.querySelector( 'style#dynamic-style' );
 			$style.textContent = [
-				'.canvas-wrap canvas {',
+				'.page-wrap, .page-wrap canvas {',
 					'height: ' + h + ';',
 					'width: ' + w + ';',
 				'}',
