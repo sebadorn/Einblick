@@ -13,6 +13,7 @@ Einblick.UI = {
 	mode: null,
 	zoom: 1.0,
 
+	_lastSearchResult: null,
 	_oldScrollTop: 0,
 	_timeoutLoadPage: 0,
 
@@ -96,6 +97,55 @@ Einblick.UI = {
 			var $zo = document.querySelector( '.zoom-options' );
 			$zo.style.display = 'none';
 		}
+	},
+
+
+	/**
+	 * Get the coordinates of words in a text node.
+	 * @param  {Text}   textNode
+	 * @param  {String} word
+	 * @return {Array<ClientRect>}
+	 */
+	_findWordsInText: function( textNode, word ) {
+		word = word.toLowerCase();
+
+		var rects = [];
+		var text = textNode.textContent.toLowerCase();
+		var offset = 0;
+
+		while( text.length > 0 ) {
+			var pos = text.indexOf( word );
+
+			if( pos < 0 ) {
+				break;
+			}
+
+			pos += offset;
+
+			var range = document.createRange();
+			var end = pos + word.length;
+
+			try {
+				range.setStart( textNode, pos );
+				range.setEnd( textNode, end );
+			}
+			catch( err ) {
+				console.error( '[Einblick.UI._findWordsInText] ' + err.message );
+				break;
+			}
+
+			var clientRects = range.getClientRects();
+
+			if( clientRects.length >= 1 ) {
+				rects.push( clientRects[0] );
+			}
+
+			var endWithoutOffset = end - offset;
+			text = text.substr( endWithoutOffset );
+			offset += endWithoutOffset;
+		}
+
+		return rects;
 	},
 
 
@@ -202,6 +252,7 @@ Einblick.UI = {
 
 		var text = String( ev.target.value ).trim();
 		var result = Einblick.search( text );
+		Einblick.UI._lastSearchResult = result;
 
 		var $results = document.querySelector( '.search-results' );
 		$results.innerHTML = '';
@@ -290,6 +341,54 @@ Einblick.UI = {
 		}
 
 		this.scrollToPage( Einblick.currentPageIndex );
+	},
+
+
+	highlightMatches: function( pageIndex ) {
+		var lastSearch = Einblick.UI._lastSearchResult;
+
+		var $page = document.getElementById( 'pdf-page-' + pageIndex );
+		var $highlightContainer = $page.querySelector( '.search-highlights' );
+		$highlightContainer.innerHTML = '';
+
+		if(
+			!lastSearch ||
+			typeof lastSearch.term !== 'string' ||
+			lastSearch.term.length === 0
+		) {
+			return;
+		}
+
+		var $cwrap = document.querySelector( '.canvas-wrap' );
+		var pageTexts = $page.querySelectorAll( '.page-text div' );
+
+		var offset = {
+			left: $cwrap.scrollLeft - $page.offsetLeft,
+			top: $cwrap.scrollTop - $page.offsetTop
+		};
+
+		for( var i = 0; i < pageTexts.length; i++ ) {
+			var $pt = pageTexts[i];
+
+			if( $pt.childNodes.length === 0 ) {
+				continue;
+			}
+
+			var textNode = $pt.childNodes[0];
+			var rects = this._findWordsInText( textNode, lastSearch.term );
+
+			for( var j = 0; j < rects.length; j++ ) {
+				var r = rects[j];
+				var $item = document.createElement( 'span' );
+				$item.className = 'search-highlight';
+				$item.style.left = ( r.left + offset.left ) + 'px';
+				$item.style.top = ( r.top + offset.top ) + 'px';
+				$item.style.height = r.height + 'px';
+				$item.style.width = r.width + 'px';
+
+				$highlightContainer.appendChild( $item );
+			}
+		}
 	},
 
 
@@ -726,8 +825,11 @@ Einblick.UI = {
 			$page.id = 'pdf-page-' + i;
 
 			var $canvas = document.createElement( 'canvas' );
+			var $search = document.createElement( 'div' );
+			$search.className = 'search-highlights';
 
 			$page.appendChild( $canvas );
+			$page.appendChild( $search );
 			$cWrap.appendChild( $page );
 
 			this.canvases[i] = {

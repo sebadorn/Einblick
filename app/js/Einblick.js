@@ -675,6 +675,7 @@ var Einblick = {
 				}
 
 				Einblick.renderTextLayer( index );
+				Einblick.UI.highlightMatches( index );
 
 				cb && cb();
 			} );
@@ -682,6 +683,7 @@ var Einblick = {
 		else {
 			Einblick.currentPageIndex = index;
 			UI.update( { index: index } );
+			Einblick.UI.highlightMatches( index );
 
 			cb && cb();
 		}
