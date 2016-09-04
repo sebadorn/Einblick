@@ -88,7 +88,7 @@ span {
 }
 
 
-header {
+#topbar {
 	align-items: center;
 	background-color: #2D2D2D;
 	display: flex;
@@ -98,7 +98,16 @@ header {
 	padding: 5px 10px;
 }
 
-	header .page {
+	#topbar .tools,
+	#topbar .layout-and-zoom {
+		width: 200px;
+	}
+
+	#topbar .layout-and-zoom {
+		text-align: right;
+	}
+
+	#topbar .page {
 		white-space: nowrap;
 	}
 
@@ -170,6 +179,50 @@ header {
 		text-align: right;
 		width: 50px;
 	}
+
+
+#searchbar {
+	box-sizing: border-box;
+	display: none;
+	left: 0;
+	position: absolute;
+	text-align: center;
+	top: 44px;
+	width: 100%;
+	z-index: 100;
+}
+
+	#searchbar .wrap {
+		background-color: #202020;
+		border-radius: 4px;
+		display: inline-flex;
+		margin: 0 auto;
+		padding: 10px;
+	}
+
+		#searchbar .goto {
+			border: 1px solid rgba( 255, 255, 255, 0.1 );
+			border-radius: 4px;
+			display: flex;
+			margin-right: 10px;
+		}
+
+			#searchbar .goto button {
+				border-radius: 0;
+				border-right: 1px solid rgba( 255, 255, 255, 0.1 );
+				flex-grow: 0;
+				flex-shrink: 0;
+			}
+
+			#searchbar .goto button:last-child {
+				border-right: 0;
+			}
+
+		#search-input {
+			border-bottom: 1px solid rgba( 255, 255, 255, 0.1 );
+			box-sizing: border-box;
+			width: 200px;
+		}
 
 
 #main {
@@ -314,6 +367,7 @@ header {
 				border: 2px solid #000000;
 				border-radius: 4px;
 				margin: -2px 0 0 2px;
+				pointer-events: none;
 				position: absolute;
 				z-index: 20;
 			}

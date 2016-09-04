@@ -9,11 +9,65 @@ Einblick.UI = {
 		SINGLE: 'single'
 	},
 
+	ZOOM_OPTIONS: [
+		{
+			cls: 'layout',
+			text: 'layoutSinglePage',
+			value: 'single'
+		},
+		{
+			cls: 'layout',
+			text: 'layoutContinuous',
+			value: 'continous'
+		},
+		{ value: '---' },
+		{
+			cls: 'zoom_named',
+			text: 'fitToWidth',
+			value: 'fitToWidth'
+		},
+		{ value: '---' },
+		{
+			cls: 'zoom',
+			text: '50%',
+			value: 0.5
+		},
+		{
+			cls: 'zoom',
+			text: '75%',
+			value: 0.75
+		},
+		{
+			cls: 'zoom',
+			text: '100%',
+			value: 1.0
+		},
+		{
+			cls: 'zoom',
+			text: '125%',
+			value: 1.25
+		},
+		{
+			cls: 'zoom',
+			text: '150%',
+			value: 1.5
+		},
+		{
+			cls: 'zoom',
+			text: '175%',
+			value: 1.75
+		},
+		{
+			cls: 'zoom',
+			text: '200%',
+			value: 2.0
+		}
+	],
+
 	canvases: {},
 	mode: null,
 	zoom: 1.0,
 
-	_lastSearchResult: null,
 	_oldScrollTop: 0,
 	_timeoutLoadPage: 0,
 
@@ -29,25 +83,25 @@ Einblick.UI = {
 			return null;
 		}
 
-		var $arrow = document.createElement( 'span' );
-		$arrow.className = 'toggle';
+		var arrow = document.createElement( 'span' );
+		arrow.className = 'toggle';
 
-		var $title = document.createElement( 'span' );
-		$title.className = 'title';
-		$title.textContent = o.title;
+		var title = document.createElement( 'span' );
+		title.className = 'title';
+		title.textContent = o.title;
 
-		var $label = document.createElement( 'span' );
-		$label.className = 'label';
-		$label.textContent = o.label || '';
+		var label = document.createElement( 'span' );
+		label.className = 'label';
+		label.textContent = o.label || '';
 
-		var $wrap = document.createElement( 'div' );
-		$wrap.className = 'wrap';
-		$wrap.appendChild( $arrow );
-		$wrap.appendChild( $title );
-		$wrap.appendChild( $label );
+		var wrap = document.createElement( 'div' );
+		wrap.className = 'wrap';
+		wrap.appendChild( arrow );
+		wrap.appendChild( title );
+		wrap.appendChild( label );
 
-		var $item = document.createElement( 'li' );
-		$item.appendChild( $wrap );
+		var item = document.createElement( 'li' );
+		item.appendChild( wrap );
 
 		if( o.items ) {
 			var tocList = [];
@@ -60,92 +114,49 @@ Einblick.UI = {
 				return ( a.pageIndex > b.pageIndex );
 			} );
 
-			var $sublist = document.createElement( 'ol' );
-			$sublist.className = 'sublist';
+			var sublist = document.createElement( 'ol' );
+			sublist.className = 'sublist';
 
 			for( var i = 0; i < tocList.length; i++ ) {
-				var $subitem = Einblick.UI._buildContentItem( tocList[i] );
-				$sublist.appendChild( $subitem );
+				var subitem = Einblick.UI._buildContentItem( tocList[i] );
+				sublist.appendChild( subitem );
 			}
 
-			$arrow.className += ' fa fa-caret-right';
-			$arrow.addEventListener( 'mouseup', Einblick.UI._toggleListTOC );
+			arrow.className += ' fa fa-caret-right';
+			arrow.addEventListener( 'mouseup', Einblick.UI._toggleListTOC );
 
-			$item.appendChild( $sublist );
+			item.appendChild( sublist );
 		}
 
-		$title.setAttribute( 'data-page', o.pageIndex );
-		$title.addEventListener( 'click', this._showSelectedContentItem );
+		title.setAttribute( 'data-page', o.pageIndex );
+		title.addEventListener( 'click', this._showSelectedContentItem );
 
-		return $item;
+		return item;
 	},
 
 
 	/**
-	 * Handle a general click event and
-	 * close all opened submenus and the like.
-	 * @param {MouseEvent} ev
+	 * Build a zoom list item.
+	 * @param  {Object}      o
+	 * @return {HTMLElement}
 	 */
-	_closeAll: function( ev ) {
-		var t = ev ? ev.target : null;
-		var $laz = document.querySelector( '.layout-and-zoom' );
+	_buildZoomItem: function( o ) {
+		var item = document.createElement( 'li' );
 
-		var $sr = document.querySelector( '.search-results' );
-		$sr.style.display = 'none';
-
-		if( !t || !$laz.contains( t ) ) {
-			var $zo = document.querySelector( '.zoom-options' );
-			$zo.style.display = 'none';
+		if( o.value == '---' ) {
+			item.className = 'sep';
 		}
-	},
-
-
-	/**
-	 * Get the coordinates of words in a text node.
-	 * @param  {Text}   textNode
-	 * @param  {String} word
-	 * @return {Array<ClientRect>}
-	 */
-	_findWordsInText: function( textNode, word ) {
-		word = word.toLowerCase();
-
-		var rects = [];
-		var text = textNode.textContent.toLowerCase();
-		var offset = 0;
-
-		while( text.length > 0 ) {
-			var pos = text.indexOf( word );
-
-			if( pos < 0 ) {
-				break;
+		else {
+			if( o.cls ) {
+				item.className = o.cls;
 			}
 
-			pos += offset;
-
-			var range = document.createRange();
-			var end = pos + word.length;
-
-			try {
-				range.setStart( textNode, pos );
-				range.setEnd( textNode, end );
-			}
-			catch( err ) {
-				console.error( '[Einblick.UI._findWordsInText] ' + err.message );
-				break;
-			}
-
-			var clientRects = range.getClientRects();
-
-			if( clientRects.length >= 1 ) {
-				rects.push( clientRects[0] );
-			}
-
-			var endWithoutOffset = end - offset;
-			text = text.substr( endWithoutOffset );
-			offset += endWithoutOffset;
+			item.innerHTML = Einblick.t( o.text );
+			item.setAttribute( 'data-zoom', o.value + '|' + o.cls);
+			item.addEventListener( 'click', this._handleZoomFromList.bind( this ) );
 		}
 
-		return rects;
+		return item;
 	},
 
 
@@ -154,10 +165,10 @@ Einblick.UI = {
 	 * @param {Event} ev
 	 */
 	_handleOpenFile: function( ev ) {
-		var $file = document.createElement( 'input' );
-		$file.type = 'file';
+		var file = document.createElement( 'input' );
+		file.type = 'file';
 
-		$file.addEventListener( 'change', function( evFile ) {
+		file.addEventListener( 'change', function( evFile ) {
 			if( evFile.target.files.length > 0 ) {
 				var p = evFile.target.files[0].path;
 				Einblick.loadFile( p );
@@ -165,7 +176,7 @@ Einblick.UI = {
 		} );
 
 		var event = new MouseEvent( 'click' );
-		$file.dispatchEvent( event );
+		file.dispatchEvent( event );
 	},
 
 
@@ -178,24 +189,24 @@ Einblick.UI = {
 			return;
 		}
 
-		var $input = ev.target;
-		var index = Number( $input.value );
+		var input = ev.target;
+		var index = Number( input.value );
 
 		if( isNaN( index ) ) {
 			return;
 		}
 
 		index = Einblick.showPage( index, function() {
-			$input.focus();
-			$input.select();
+			input.focus();
+			input.select();
 		} );
 		this.scrollToPage( index );
 
 		if( this.mode === this.PAGE_MODE.SINGLE ) {
 			this.hideAllCanvases();
 
-			var $p = document.querySelector( '#pdf-page-' + index );
-			$p.style.display = '';
+			var p = document.querySelector( '#pdf-page-' + index );
+			p.style.display = '';
 		}
 	},
 
@@ -217,13 +228,13 @@ Einblick.UI = {
 		}
 
 		this._timeoutLoadPage = setTimeout( function() {
-			var $p = document.querySelector( '#pdf-page-1' );
+			var p = document.querySelector( '#pdf-page-1' );
 
-			if( !$p ) {
+			if( !p ) {
 				return;
 			}
 
-			var pStyle = window.getComputedStyle( $p );
+			var pStyle = window.getComputedStyle( p );
 			var pageHeight = Number( pStyle.height.replace( 'px', '' ) );
 
 			var scrollTop = ev.target.scrollTop;
@@ -240,37 +251,6 @@ Einblick.UI = {
 
 
 	/**
-	 * Handle the serch input.
-	 * @param {KeyEvent} ev
-	 */
-	_handleSearch: function( ev ) {
-		if( ev.keyCode != 13 ) {
-			return;
-		}
-
-		this._closeAll();
-
-		var text = String( ev.target.value ).trim();
-		var result = Einblick.search( text );
-		Einblick.UI._lastSearchResult = result;
-
-		var $results = document.querySelector( '.search-results' );
-		$results.innerHTML = '';
-
-		for( var i = 0; i < result.matches.length; i++ ) {
-			var match = result.matches[i];
-			var $item = document.createElement( 'li' );
-			$item.setAttribute( 'data-page', match.page );
-			$item.textContent = 'page: ' + match.page;
-
-			$results.appendChild( $item );
-		}
-
-		$results.style.display = 'block';
-	},
-
-
-	/**
 	 * Handle the zoom input events.
 	 * @param {KeyEvent} ev
 	 */
@@ -279,8 +259,8 @@ Einblick.UI = {
 			return;
 		}
 
-		var $input = ev.target;
-		var zoom = String( $input.value );
+		var input = ev.target;
+		var zoom = String( input.value );
 		zoom = zoom.trim();
 		zoom = zoom.replace( '%', '' );
 		zoom = zoom.replace( ',', '.' );
@@ -308,13 +288,13 @@ Einblick.UI = {
 	 * @param {MouseEvent} ev
 	 */
 	_handleZoomFromList: function( ev ) {
-		var $item = ev.target;
-		var data = $item.getAttribute( 'data-zoom' ).split( '|' );
+		var item = ev.target;
+		var data = item.getAttribute( 'data-zoom' ).split( '|' );
 		var dataZoom = data[0];
 		var dataType = data[1];
 
-		var $zo = document.querySelector( '#topbar .zoom-options' );
-		$zo.style.display = 'none';
+		var zo = document.querySelector( '#topbar .zoom-options' );
+		zo.style.display = 'none';
 
 		// Zoom value.
 		if( dataType == 'zoom' ) {
@@ -344,65 +324,17 @@ Einblick.UI = {
 	},
 
 
-	highlightMatches: function( pageIndex ) {
-		var lastSearch = Einblick.UI._lastSearchResult;
-
-		var $page = document.getElementById( 'pdf-page-' + pageIndex );
-		var $highlightContainer = $page.querySelector( '.search-highlights' );
-		$highlightContainer.innerHTML = '';
-
-		if(
-			!lastSearch ||
-			typeof lastSearch.term !== 'string' ||
-			lastSearch.term.length === 0
-		) {
-			return;
-		}
-
-		var $cwrap = document.querySelector( '.canvas-wrap' );
-		var pageTexts = $page.querySelectorAll( '.page-text div' );
-
-		var offset = {
-			left: $cwrap.scrollLeft - $page.offsetLeft,
-			top: $cwrap.scrollTop - $page.offsetTop
-		};
-
-		for( var i = 0; i < pageTexts.length; i++ ) {
-			var $pt = pageTexts[i];
-
-			if( $pt.childNodes.length === 0 ) {
-				continue;
-			}
-
-			var textNode = $pt.childNodes[0];
-			var rects = this._findWordsInText( textNode, lastSearch.term );
-
-			for( var j = 0; j < rects.length; j++ ) {
-				var r = rects[j];
-				var $item = document.createElement( 'span' );
-				$item.className = 'search-highlight';
-				$item.style.left = ( r.left + offset.left ) + 'px';
-				$item.style.top = ( r.top + offset.top ) + 'px';
-				$item.style.height = r.height + 'px';
-				$item.style.width = r.width + 'px';
-
-				$highlightContainer.appendChild( $item );
-			}
-		}
-	},
-
-
 	/**
 	 * Initialize Drag&Drop.
 	 */
 	_initDragAndDrop: function() {
-		var $area = document.querySelector( '.canvas-wrap' );
+		var area = document.querySelector( '.canvas-wrap' );
 
-		$area.addEventListener( 'dragover', function( ev ) {
+		area.addEventListener( 'dragover', function( ev ) {
 			ev.preventDefault();
 		} );
 
-		$area.addEventListener( 'drop', function( ev ) {
+		area.addEventListener( 'drop', function( ev ) {
 			ev.preventDefault();
 
 			var files = ev.dataTransfer.files;
@@ -420,57 +352,44 @@ Einblick.UI = {
 	 * Initialize the header.
 	 */
 	_initHeader: function() {
-		var $btnSidebar = document.querySelector( '#toggle-sidebar' );
-		$btnSidebar.addEventListener( 'click', this._toggleSidebar.bind( this ) );
+		var btnSidebar = document.querySelector( '#toggle-sidebar' );
+		btnSidebar.addEventListener( 'click', this._toggleSidebar.bind( this ) );
 
-		var $btnOpenFile = document.querySelector( '#open-file' );
-		$btnOpenFile.addEventListener( 'click', this._handleOpenFile.bind( this ) );
+		var btnOpenFile = document.querySelector( '#open-file' );
+		btnOpenFile.addEventListener( 'click', this._handleOpenFile.bind( this ) );
 
 
-		var $btnPagePrev = document.querySelector( '#page-prev' );
-		$btnPagePrev.addEventListener( 'click', function( ev ) {
+		var btnPagePrev = document.querySelector( '#page-prev' );
+		btnPagePrev.addEventListener( 'click', function( ev ) {
 			Einblick.pagePrevious();
 		} );
 
-		var $btnPageNext = document.querySelector( '#page-next' );
-		$btnPageNext.addEventListener( 'click', function( ev ) {
+		var btnPageNext = document.querySelector( '#page-next' );
+		btnPageNext.addEventListener( 'click', function( ev ) {
 			Einblick.pageNext();
 		} );
 
-		var $inputPage = document.querySelector( '#topbar .index' );
-		$inputPage.addEventListener( 'keyup', this._handlePageIndex.bind( this ) );
+		var inputPage = document.querySelector( '#topbar .index' );
+		inputPage.addEventListener( 'keyup', this._handlePageIndex.bind( this ) );
 
-
-		var $inputSearch = document.querySelector( '#search-input' );
-		$inputSearch.addEventListener( 'keyup', this._handleSearch.bind( this ) );
-
-		var $results = document.querySelector( '.search-results' );
-		$results.addEventListener( 'click', function( ev ) {
-			var $item = ev.target;
-			var pageIndex = Number( $item.getAttribute( 'data-page' ) );
-
-			Einblick.showPage( pageIndex, function() {
-				Einblick.UI.scrollToPage( pageIndex );
-			} );
-		} );
 
 		this._initZoomOptions();
 
-		var $btnZoom = document.querySelector( '#select-zoom' );
-		$btnZoom.addEventListener( 'click', function( ev ) {
-			var $zo = document.querySelector( '#topbar .zoom-options' );
-			var style = window.getComputedStyle( $zo );
+		var btnZoom = document.querySelector( '#select-zoom' );
+		btnZoom.addEventListener( 'click', function( ev ) {
+			var zo = document.querySelector( '#topbar .zoom-options' );
+			var style = window.getComputedStyle( zo );
 
 			if( style.display == 'none' ) {
-				$zo.style.display = 'block';
+				zo.style.display = 'block';
 			}
 			else {
-				$zo.style.display = 'none';
+				zo.style.display = 'none';
 			}
 		} );
 
-		var $inputZoom = document.querySelector( '#topbar input.zoom' );
-		$inputZoom.addEventListener( 'keyup', this._handleZoomFromInput.bind( this ) );
+		var inputZoom = document.querySelector( '#topbar input.zoom' );
+		inputZoom.addEventListener( 'keyup', this._handleZoomFromInput.bind( this ) );
 	},
 
 
@@ -478,9 +397,9 @@ Einblick.UI = {
 	 * Register keyboard shortcuts.
 	 */
 	_initShortcuts: function() {
-		var $body = document.body;
+		var body = document.body;
 
-		$body.addEventListener( 'keyup', function( ev ) {
+		body.addEventListener( 'keyup', function( ev ) {
 			switch( ev.keyCode ) {
 				// Arrow left: Previous page.
 				case 37:
@@ -496,13 +415,20 @@ Einblick.UI = {
 					}
 					break;
 
+				// Ctrl+F: Show searchbar.
+				case 70:
+					if( ev.ctrlKey ) {
+						Einblick.Search.showSearchbar();
+					}
+					break;
+
 				// F12: open dev tools
 				case 123:
 					var win = electron.remote.getCurrentWindow();
 					win.openDevTools( { mode: 'undocked' } );
 					break;
 			}
-		} );
+		}.bind( this ) );
 	},
 
 
@@ -510,81 +436,12 @@ Einblick.UI = {
 	 * Initialize the zoom options.
 	 */
 	_initZoomOptions: function() {
-		var $list = document.querySelector( '#topbar .zoom-options' );
-
-		var options = [
-			{
-				cls: 'layout',
-				text: Einblick.t( 'layoutSinglePage' ),
-				value: this.PAGE_MODE.SINGLE
-			},
-			{
-				cls: 'layout',
-				text: Einblick.t( 'layoutContinuous' ),
-				value: this.PAGE_MODE.CONTINUOUS
-			},
-			{ value: '---' },
-			{
-				cls: 'zoom_named',
-				text: Einblick.t( 'fitToWidth' ),
-				value: 'fitToWidth'
-			},
-			{ value: '---' },
-			{
-				cls: 'zoom',
-				text: Einblick.t( '50%' ),
-				value: 0.5
-			},
-			{
-				cls: 'zoom',
-				text: Einblick.t( '75%' ),
-				value: 0.75
-			},
-			{
-				cls: 'zoom',
-				text: Einblick.t( '100%' ),
-				value: 1.0
-			},
-			{
-				cls: 'zoom',
-				text: Einblick.t( '125%' ),
-				value: 1.25
-			},
-			{
-				cls: 'zoom',
-				text: Einblick.t( '150%' ),
-				value: 1.5
-			},
-			{
-				cls: 'zoom',
-				text: Einblick.t( '175%' ),
-				value: 1.75
-			},
-			{
-				cls: 'zoom',
-				text: Einblick.t( '200%' ),
-				value: 2.0
-			}
-		];
+		var list = document.querySelector( '#topbar .zoom-options' );
+		var options = Einblick.UI.ZOOM_OPTIONS;
 
 		for( var i = 0; i < options.length; i++ ) {
-			var o = options[i];
-			var $item = document.createElement( 'li' );
-
-			if( o.value == '---' ) {
-				$item.className = 'sep';
-			}
-			else {
-				if( o.cls ) {
-					$item.className = o.cls;
-				}
-
-				$item.innerHTML = o.text;
-				$item.setAttribute( 'data-zoom', o.value + '|' + o.cls);
-				$item.addEventListener( 'click', this._handleZoomFromList.bind( this ) );
-			}
-
-			$list.appendChild( $item );
+			var item = this._buildZoomItem( options[i] );
+			list.appendChild( item );
 		}
 	},
 
@@ -595,8 +452,8 @@ Einblick.UI = {
 	 * @param {Event} ev
 	 */
 	_showSelectedContentItem: function( ev ) {
-		var $item = ev.currentTarget || ev.target;
-		var index = $item.getAttribute( 'data-page' );
+		var item = ev.currentTarget || ev.target;
+		var index = item.getAttribute( 'data-page' );
 		index = Number( index );
 
 		Einblick.showPage( index, function() {
@@ -610,21 +467,21 @@ Einblick.UI = {
 	 * @param {MouseEvent} ev
 	 */
 	_toggleListTOC: function( ev ) {
-		var $arrow = ev.currentTarget || ev.target;
-		var $item = $arrow.parentNode.parentNode;
-		var clsArr = $item.className.split( ' ' );
+		var arrow = ev.currentTarget || ev.target;
+		var item = arrow.parentNode.parentNode;
+		var clsArr = item.className.split( ' ' );
 		var pos = clsArr.indexOf( 'extended' );
 
 		if( pos >= 0 ) {
-			$arrow.className = $arrow.className.replace( 'caret-down', 'caret-right' );
+			arrow.className = arrow.className.replace( 'caret-down', 'caret-right' );
 			clsArr.splice( pos, 1 );
 		}
 		else {
-			$arrow.className = $arrow.className.replace( 'caret-right', 'caret-down' );
+			arrow.className = arrow.className.replace( 'caret-right', 'caret-down' );
 			clsArr.push( 'extended' );
 		}
 
-		$item.className = clsArr.join( ' ' );
+		item.className = clsArr.join( ' ' );
 	},
 
 
@@ -637,16 +494,16 @@ Einblick.UI = {
 			return;
 		}
 
-		var $arrow = ev.target;
-		var $sb = document.querySelector( '#sidebar' );
+		var arrow = ev.target;
+		var sb = document.querySelector( '#sidebar' );
 
-		if( $sb.className == 'extended' ) {
-			$sb.className = '';
-			$arrow.className = $arrow.className.replace( '-left', '-right' );
+		if( sb.className == 'extended' ) {
+			sb.className = '';
+			arrow.className = arrow.className.replace( '-left', '-right' );
 		}
 		else {
-			$sb.className = 'extended';
-			$arrow.className = $arrow.className.replace( '-right', '-left' );
+			sb.className = 'extended';
+			arrow.className = arrow.className.replace( '-right', '-left' );
 		}
 	},
 
@@ -659,8 +516,8 @@ Einblick.UI = {
 			return;
 		}
 
-		var $list = document.querySelector( '#sidebar .contents' );
-		$list.innerHTML = '';
+		var list = document.querySelector( '#sidebar .contents' );
+		list.innerHTML = '';
 
 		var tocList = [];
 
@@ -673,8 +530,8 @@ Einblick.UI = {
 		} );
 
 		for( var i = 0; i < tocList.length; i++ ) {
-			var $item = Einblick.UI._buildContentItem( tocList[i] );
-			$list.appendChild( $item );
+			var item = Einblick.UI._buildContentItem( tocList[i] );
+			list.appendChild( item );
 		}
 	},
 
@@ -690,8 +547,8 @@ Einblick.UI = {
 
 		this.mode = mode;
 
-		var $main = document.querySelector( '#main' );
-		var clsNow = $main.className;
+		var main = document.querySelector( '#main' );
+		var clsNow = main.className;
 		var MODES = this.PAGE_MODE;
 
 		for( var key in MODES ) {
@@ -700,16 +557,16 @@ Einblick.UI = {
 		}
 
 		clsNow += ' layout-mode-' + mode;
-		$main.className = clsNow.trim();
+		main.className = clsNow.trim();
 
 		if( mode == MODES.SINGLE ) {
 			this.hideAllCanvases();
 
-			var $p = document.querySelector( '#pdf-page-' + Einblick.currentPageIndex );
-			$p.style.display = '';
+			var p = document.querySelector( '#pdf-page-' + Einblick.currentPageIndex );
+			p.style.display = '';
 
-			var $cw = document.querySelector( '.canvas-wrap' );
-			$cw.scrollTop = 0;
+			var cw = document.querySelector( '.canvas-wrap' );
+			cw.scrollTop = 0;
 		}
 		else {
 			this.showAllCanvases();
@@ -734,6 +591,25 @@ Einblick.UI = {
 			index: 0,
 			numPages: 0
 		} );
+	},
+
+
+	/**
+	 * Handle a general click event and
+	 * close all opened submenus and the like.
+	 * @param {MouseEvent} ev
+	 */
+	closeAllOverlays: function( ev ) {
+		var t = ev ? ev.target : null;
+		var laz = document.querySelector( '.layout-and-zoom' );
+
+		var sr = document.querySelector( '.search-results' );
+		sr.style.display = 'none';
+
+		if( !t || !laz.contains( t ) ) {
+			var zo = document.querySelector( '.zoom-options' );
+			zo.style.display = 'none';
+		}
 	},
 
 
@@ -776,10 +652,10 @@ Einblick.UI = {
 	 * Hide all canvases.
 	 */
 	hideAllCanvases: function() {
-		var $pw = document.querySelectorAll( '.canvas-wrap .page-wrap' );
+		var pw = document.querySelectorAll( '.canvas-wrap .page-wrap' );
 
-		for( var i = 0; i < $pw.length; i++ ) {
-			$pw[i].style.display = 'none';
+		for( var i = 0; i < pw.length; i++ ) {
+			pw[i].style.display = 'none';
 		}
 	},
 
@@ -796,16 +672,17 @@ Einblick.UI = {
 		this._initHeader();
 		this._initDragAndDrop();
 
-		var $cw = document.querySelector( '.canvas-wrap' );
-		this._oldScrollTop = $cw.scrollTop;
-		$cw.addEventListener( 'scroll', this._handlePageScroll.bind( this ) );
+		var cw = document.querySelector( '.canvas-wrap' );
+		this._oldScrollTop = cw.scrollTop;
+		cw.addEventListener( 'scroll', this._handlePageScroll.bind( this ) );
 
-		var $body = document.body;
-		$body.addEventListener( 'click', this._closeAll.bind( this ) );
+		var body = document.body;
+		body.addEventListener( 'click', this.closeAllOverlays.bind( this ) );
 
-		this.translate(
-			document.querySelectorAll( '[data-trans]' )
-		);
+		var selector = '[data-trans], [data-trans-placeholder], [data-trans-title]';
+		this.translate( document.querySelectorAll( selector ) );
+
+		Einblick.Search.initUI();
 
 		cb && cb();
 	},
@@ -816,26 +693,26 @@ Einblick.UI = {
 	 * @param {Function} cb Callback.
 	 */
 	initPages: function( cb ) {
-		var $cWrap = document.querySelector( '.canvas-wrap' );
+		var cWrap = document.querySelector( '.canvas-wrap' );
 		this.canvases = {};
 
 		for( var i = 1; i <= Einblick.doc.numPages; i++ ) {
-			var $page = document.createElement( 'div' );
-			$page.className = 'page-wrap';
-			$page.id = 'pdf-page-' + i;
+			var page = document.createElement( 'div' );
+			page.className = 'page-wrap';
+			page.id = 'pdf-page-' + i;
 
-			var $canvas = document.createElement( 'canvas' );
-			var $search = document.createElement( 'div' );
-			$search.className = 'search-highlights';
+			var canvas = document.createElement( 'canvas' );
+			var search = document.createElement( 'div' );
+			search.className = 'search-highlights';
 
-			$page.appendChild( $canvas );
-			$page.appendChild( $search );
-			$cWrap.appendChild( $page );
+			page.appendChild( canvas );
+			page.appendChild( search );
+			cWrap.appendChild( page );
 
 			this.canvases[i] = {
-				canvas: $canvas,
+				canvas: canvas,
 				loaded: false,
-				page: $page,
+				page: page,
 				text: null
 			};
 		}
@@ -846,11 +723,11 @@ Einblick.UI = {
 
 	/**
 	 * Check if node is some kind of input node.
-	 * @param  {HTMLElement} $node Node to check.
-	 * @return {Boolean}           True if is input, false otherwise.
+	 * @param  {HTMLElement} node Node to check.
+	 * @return {Boolean}          True if is input, false otherwise.
 	 */
-	isInput: function( $node ) {
-		if( !$node ) {
+	isInput: function( node ) {
+		if( !node ) {
 			return false;
 		}
 
@@ -858,7 +735,7 @@ Einblick.UI = {
 			'input',
 			'textarea'
 		];
-		var tag = $node.tagName.toLowerCase();
+		var tag = node.tagName.toLowerCase();
 
 		if( inputs.indexOf( tag ) >= 0 ) {
 			return true;
@@ -882,8 +759,8 @@ Einblick.UI = {
 
 		if( first && node ) {
 			var top = node.offsetTop - first.offsetTop;
-			var $cw = document.querySelector( '.canvas-wrap' );
-			$cw.scrollTop = top;
+			var cw = document.querySelector( '.canvas-wrap' );
+			cw.scrollTop = top;
 		}
 	},
 
@@ -892,40 +769,49 @@ Einblick.UI = {
 	 * Show all canvases again after having hidden them.
 	 */
 	showAllCanvases: function() {
-		var $pw = document.querySelectorAll( '.canvas-wrap .page-wrap' );
+		var pw = document.querySelectorAll( '.canvas-wrap .page-wrap' );
 
-		for( var i = 0; i < $pw.length; i++ ) {
-			$pw[i].style.display = '';
+		for( var i = 0; i < pw.length; i++ ) {
+			pw[i].style.display = '';
 		}
 	},
 
 
 	/**
 	 * Set the translated text for a given node.
-	 * @param {HTMLElement|Array<HTMLElement>} $node
+	 * @param {HTMLElement|Array<HTMLElement>} node
 	 */
-	translate: function( $node ) {
-		if( !$node ) {
+	translate: function( node ) {
+		if( !node ) {
 			return;
 		}
 
-		if( Array.isArray( $node ) || $node instanceof NodeList ) {
-			for( var i = 0; i < $node.length; i++ ) {
-				Einblick.UI.translate( $node[i] );
+		if( Array.isArray( node ) || node instanceof NodeList ) {
+			for( var i = 0; i < node.length; i++ ) {
+				Einblick.UI.translate( node[i] );
 			}
 
 			return;
 		}
 
-		var key = $node.getAttribute( 'data-trans' );
+		var key = node.getAttribute( 'data-trans' );
+		var placeholder = node.getAttribute( 'data-trans-placeholder' );
+		var title = node.getAttribute( 'data-trans-title' );
+		var text = null;
 
-		if( !key ) {
-			return;
+		if( key ) {
+			node.innerHTML = Einblick.t( key );
 		}
 
-		var text = Einblick.t( key );
+		if( placeholder ) {
+			text = Einblick.t( placeholder );
+			node.setAttribute( 'placeholder', text );
+		}
 
-		$node.innerHTML = text;
+		if( title ) {
+			text = Einblick.t( title );
+			node.setAttribute( 'title', text );
+		}
 	},
 
 
@@ -936,18 +822,18 @@ Einblick.UI = {
 	update: function( data ) {
 		if( typeof data.zoom === 'number' ) {
 			var z = data.zoom * 100.0;
-			var $z = document.querySelector( '#topbar input.zoom' );
-			$z.value = z + '%';
+			var inputZoom = document.querySelector( '#topbar input.zoom' );
+			inputZoom.value = z + '%';
 		}
 
 		if( typeof data.index === 'number' ) {
-			var $i = document.querySelector( '#topbar input.index' );
-			$i.value = data.index;
+			var i = document.querySelector( '#topbar input.index' );
+			i.value = data.index;
 		}
 
 		if( typeof data.numPages === 'number' ) {
-			var $p = document.querySelector( '#topbar .pages' );
-			$p.textContent = data.numPages;
+			var p = document.querySelector( '#topbar .pages' );
+			p.textContent = data.numPages;
 		}
 
 		if(
@@ -973,8 +859,8 @@ Einblick.UI = {
 
 			var zoom = Einblick.UI.zoom;
 
-			var $style = document.querySelector( 'style#dynamic-style' );
-			$style.textContent = [
+			var style = document.querySelector( 'style#dynamic-style' );
+			style.textContent = [
 				'.page-wrap, .page-wrap canvas {',
 					'height: ' + h + ';',
 					'width: ' + w + ';',
@@ -986,21 +872,21 @@ Einblick.UI = {
 		}
 
 		if( typeof data.filesize === 'number' ) {
-			var formatted = this.formatSize( data.filesize );
-			var s = formatted.size;
-			s = Math.round( s * 100 ) / 100;
+			var formattedFSize = this.formatSize( data.filesize );
+			var fSize = formattedFSize.size;
+			fSize = Math.round( fSize * 100 ) / 100;
 
-			var $s = document.querySelector( '#statusbar .filesize .val' );
-			$s.innerHTML = s + '&thinsp;' + formatted.unit;
+			var size = document.querySelector( '#statusbar .filesize .val' );
+			size.innerHTML = fSize + '&thinsp;' + formattedFSize.unit;
 		}
 
 		if( typeof data.memory === 'number' ) {
-			var formatted = this.formatSize( data.memory );
-			var s = formatted.size;
-			s = Math.round( s * 100 ) / 100;
+			var formattedMemSize = this.formatSize( data.memory );
+			var memSize = formattedMemSize.size;
+			memSize = Math.round( memSize * 100 ) / 100;
 
-			var $s = document.querySelector( '#statusbar .memory .val' );
-			$s.innerHTML = s + '&thinsp;' + formatted.unit;
+			var mem = document.querySelector( '#statusbar .memory .val' );
+			mem.innerHTML = memSize + '&thinsp;' + formattedMemSize.unit;
 		}
 	}
 

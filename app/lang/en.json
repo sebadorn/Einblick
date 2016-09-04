@@ -3,5 +3,7 @@
 	"fitToWidth": "Fit to width",
 	"layoutContinuous": "Continuous",
 	"layoutSinglePage": "Single page",
-	"preview": "Preview"
+	"matchCase": "Match Case",
+	"preview": "Preview",
+	"searchPlaceholder": "Search …"
 }

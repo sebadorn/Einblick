@@ -9,15 +9,68 @@ var Einblick = {
 	docMeta: null,
 	pages: {},
 	pageTexts: {},
-	searchStructure: {},
 	toc: {},
 
 	_intervalMemory: 0,
 	_pageHistory: [],
 	_scripts: [
+		'Search.js',
 		'UI.js'
 	],
 	_texts: null,
+
+
+	/**
+	 * Callback after loading table of contents data.
+	 * @param {Array<Object>|null} outline
+	 * @param {Array<String>|null} labels
+	 */
+	_cbLoadDataTOC: function( outline, labels ) {
+		Einblick.buildTOC( Einblick.toc, outline, labels, function() {
+			Einblick.UI.buildContentList();
+		} );
+	},
+
+
+	/**
+	 * Callback after loading page texts.
+	 */
+	_cbLoadPageTexts: function() {
+		Einblick.Search.buildSearchStructure(
+			Einblick.pageTexts
+		);
+
+		Einblick.UI.initPages( function() {
+			Einblick.UI.update( {
+				numPages: Einblick.doc.numPages
+			} );
+
+			Einblick.showPage( 1 );
+		} );
+	},
+
+
+	/**
+	 * Callback after loading meta data.
+	 * @param {Object} meta Meta data.
+	 */
+	_cbMetaData: function( meta ) {
+		Einblick.docMeta = meta;
+
+		if( meta && meta.info ) {
+			var title = document.querySelector( 'title' );
+			title.textContent = meta.info.Title;
+		}
+	},
+
+
+	/**
+	 * Callback on error in meta data loading.
+	 * @param {Error} err
+	 */
+	_cbMetaDataError: function( err ) {
+		console.error( '[Einblick._cbMetaDataError] ' + err.message );
+	},
 
 
 	/**
@@ -103,35 +156,6 @@ var Einblick = {
 				if( pageIndex - current >= minPageDistance ) {
 					this.unloadPage( pageIndex );
 				}
-			}
-		}
-	},
-
-
-	/**
-	 * Build the search structure.
-	 * @param {Object} pageTexts
-	 */
-	buildSearchStructure: function( pageTexts ) {
-		this.searchStructure = {};
-
-		for( var pageIndex in pageTexts ) {
-			var text = '';
-			var p = pageTexts[pageIndex];
-
-			if( !p || !p.items ) {
-				continue;
-			}
-
-			for( var i = 0; i < p.items.length; i++ ) {
-				var item = p.items[i];
-				text += item.str + ' ';
-			}
-
-			text = text.trim();
-
-			if( text.length > 0 ) {
-				this.searchStructure[pageIndex] = text;
 			}
 		}
 	},
@@ -234,8 +258,8 @@ var Einblick = {
 			return;
 		}
 
-		var $cw = document.querySelector( '.canvas-wrap' );
-		var cwStyle = window.getComputedStyle( $cw );
+		var cw = document.querySelector( '.canvas-wrap' );
+		var cwStyle = window.getComputedStyle( cw );
 		var cwWidth = Number( cwStyle.width.replace( 'px', '' ) );
 		var areaWidth = cwWidth - 16;
 
@@ -322,14 +346,26 @@ var Einblick = {
 				return;
 			}
 
-			Einblick.doc.getPage( i ).then( function( page ) {
-				page.getTextContent().then( function( tc ) {
-					var index = page.pageIndex + 1;
-					Einblick.pageTexts[index] = tc;
+			Einblick.doc.getPage( i ).then(
+				function( page ) {
+					page.getTextContent().then(
+						function( tc ) {
+							var index = page.pageIndex + 1;
+							Einblick.pageTexts[index] = tc;
 
-					loadNext( i + 1 );
-				} );
-			} );
+							loadNext( i + 1 );
+						},
+
+						function( err ) {
+							console.error( '[Einblick._cbGetPage] ' + err.message );
+						}
+					);
+				},
+
+				function( err ) {
+					console.error( '[Einblick._cbGetPageError] ' + err.message );
+				}
+			);
 		};
 
 		loadNext( 1 );
@@ -342,35 +378,14 @@ var Einblick = {
 	 */
 	loadPDF: function( fp ) {
 		var pdfLoaded = function( pdf ) {
-			Einblick.doc = pdf;
-
-			Einblick.doc.getMetadata().then( function( meta ) {
-				Einblick.docMeta = meta;
-
-				if( meta && meta.info ) {
-					var $title = document.querySelector( 'title' );
-					$title.textContent = meta.info.Title;
-				}
-			} );
-
-			Einblick.loadPageTexts( function() {
-				Einblick.buildSearchStructure( Einblick.pageTexts );
-
-				Einblick.UI.initPages( function() {
-					Einblick.UI.update( {
-						numPages: Einblick.doc.numPages
-					} );
-
-					Einblick.showPage( 1 );
-				} );
-			} );
-
-			Einblick._loadDataForTOC( function( outline, labels ) {
-				Einblick.buildTOC( Einblick.toc, outline, labels, function() {
-					Einblick.UI.buildContentList();
-				} );
-			} );
-		};
+			this.doc = pdf;
+			this.doc.getMetadata().then(
+				this._cbMetaData,
+				this._cbMetaDataError
+			);
+			this.loadPageTexts( this._cbLoadPageTexts );
+			this._loadDataForTOC( this._cbLoadDataTOC );
+		}.bind( this );
 
 		var pdfError = function( err ) {
 			console.error( '[Einblick.loadFile] ' + err.message );
@@ -434,8 +449,8 @@ var Einblick = {
 		if( Einblick.UI.mode === Einblick.UI.PAGE_MODE.SINGLE ) {
 			Einblick.UI.hideAllCanvases();
 
-			var $p = document.querySelector( '#pdf-page-' + next );
-			$p.style.display = '';
+			var p = document.querySelector( '#pdf-page-' + next );
+			p.style.display = '';
 		}
 	},
 
@@ -457,8 +472,8 @@ var Einblick = {
 		if( Einblick.UI.mode === Einblick.UI.PAGE_MODE.SINGLE ) {
 			Einblick.UI.hideAllCanvases();
 
-			var $p = document.querySelector( '#pdf-page-' + prev );
-			$p.style.display = '';
+			var p = document.querySelector( '#pdf-page-' + prev );
+			p.style.display = '';
 		}
 	},
 
@@ -486,45 +501,6 @@ var Einblick = {
 			viewport: page.getViewport( 1 ),
 			textDivs: []
 		} );
-	},
-
-
-	/**
-	 * Search for the given String.
-	 * @param  {String} str String to search.
-	 * @return {Object}     Matches found on pages.
-	 */
-	search: function( str ) {
-		str = str.trim();
-
-		var result = {
-			term: str,
-			matches: []
-		};
-
-		if( str.length === 0 ) {
-			return result;
-		}
-
-		// Escape all special characters in the search term.
-		str = str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-		var regex = new RegExp( str, 'gi' );
-
-		for( var pageIndex in this.searchStructure ) {
-			var text = this.searchStructure[pageIndex];
-			var matches = regex.exec(text);
-
-			if( !matches ) {
-				continue;
-			}
-
-			result.matches.push( {
-				page: pageIndex,
-				numMatches: matches.length
-			} );
-		}
-
-		return result;
 	},
 
 
@@ -675,7 +651,7 @@ var Einblick = {
 				}
 
 				Einblick.renderTextLayer( index );
-				Einblick.UI.highlightMatches( index );
+				Einblick.Search.highlightMatches( index );
 
 				cb && cb();
 			} );
@@ -683,7 +659,7 @@ var Einblick = {
 		else {
 			Einblick.currentPageIndex = index;
 			UI.update( { index: index } );
-			Einblick.UI.highlightMatches( index );
+			Einblick.Search.highlightMatches( index );
 
 			cb && cb();
 		}
@@ -697,9 +673,9 @@ var Einblick = {
 				break;
 			}
 
-			var cData = UI.canvases[indexPrev];
+			var cDataPrev = UI.canvases[indexPrev];
 
-			if( cData && cData.loaded ) {
+			if( cDataPrev && cDataPrev.loaded ) {
 				continue;
 			}
 
@@ -720,9 +696,9 @@ var Einblick = {
 				break;
 			}
 
-			var cData = UI.canvases[indexNext];
+			var cDataNext = UI.canvases[indexNext];
 
-			if( cData && cData.loaded ) {
+			if( cDataNext && cDataNext.loaded ) {
 				continue;
 			}
 
@@ -763,13 +739,13 @@ var Einblick = {
 		this.pages[index].cleanup();
 		delete this.pages[index];
 
-		var $newCanvas = document.createElement( 'canvas' );
-		$newCanvas.style = c.canvas.style;
-		$newCanvas.width = c.canvas.width;
-		$newCanvas.height = c.canvas.height;
-		c.page.replaceChild( $newCanvas, c.canvas );
+		var newCanvas = document.createElement( 'canvas' );
+		newCanvas.style = c.canvas.style;
+		newCanvas.width = c.canvas.width;
+		newCanvas.height = c.canvas.height;
+		c.page.replaceChild( newCanvas, c.canvas );
 
-		c.canvas = $newCanvas;
+		c.canvas = newCanvas;
 		c.loaded = false;
 	}
 

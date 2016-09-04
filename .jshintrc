@@ -9,5 +9,5 @@
 		"Einblick": true
 	},
 	"node": true,
-	"shadow": true
+	"shadow": false
 }

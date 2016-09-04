@@ -3,5 +3,7 @@
 	"fitToWidth": "An Breite anpassen",
 	"layoutContinuous": "Fortlaufend",
 	"layoutSinglePage": "Einzelseite",
-	"preview": "Vorschau"
+	"matchCase": "Groß-/Kleinschreibung",
+	"preview": "Vorschau",
+	"searchPlaceholder": "Suche …"
 }

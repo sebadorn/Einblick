@@ -35,15 +35,27 @@
 	</div>
 
 	<div class="layout-and-zoom">
-		<input type="text" id="search-input" placeholder="Search …" />
-		<ul class="search-results"></ul>
-
 		<button id="select-zoom" class="fa fa-chevron-down"></button>
 		<ul class="zoom-options"></ul>
 
 		<input type="text" class="zoom" value="100%" />
 	</div>
 </header>
+
+<div id="searchbar">
+	<div class="wrap">
+		<div class="goto">
+			<button id="jump-prev-result" class="fa fa-arrow-up"></button>
+			<button id="jump-next-result" class="fa fa-arrow-down"></button>
+		</div>
+
+		<input type="text" id="search-input" data-trans-placeholder="searchPlaceholder" />
+		<button id="search-case-sensitive" data-trans="matchCase"></button>
+		<span class="num-results"></span>
+
+		<ul class="search-results"></ul>
+	</div>
+</div>
 
 <section id="main">
 	<aside id="sidebar">
