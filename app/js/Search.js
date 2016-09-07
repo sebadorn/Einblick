@@ -7,6 +7,7 @@ Einblick.Search = {
 	_currentSelectedResult: null,
 	_lastSearchResult: null,
 
+	isCaseSensitive: false,
 	searchStructure: {},
 
 
@@ -137,11 +138,14 @@ Einblick.Search = {
 	 * @return {Array<ClientRect>}
 	 */
 	findWordsInText: function( textNode, word ) {
-		word = word.toLowerCase();
-
 		var rects = [];
-		var text = textNode.textContent.toLowerCase();
+		var text = textNode.textContent;
 		var offset = 0;
+
+		if( !this.isCaseSensitive ) {
+			word = word.toLowerCase();
+			text = text.toLowerCase();
+		}
 
 		while( text.length > 0 ) {
 			var pos = text.indexOf( word );
@@ -234,6 +238,9 @@ Einblick.Search = {
 
 		var btnJumpPrev = document.getElementById( 'jump-prev-result' );
 		btnJumpPrev.addEventListener( 'click', this.jumpToPrevResult.bind( this ) );
+
+		var btnCase = document.getElementById( 'search-case-sensitive' );
+		btnCase.addEventListener( 'click', this.toggleCaseSensitive.bind( this ) );
 
 		var inputSearch = document.getElementById( 'search-input' );
 		inputSearch.addEventListener( 'keyup', this._handleSearch.bind( this ) );
@@ -331,8 +338,9 @@ Einblick.Search = {
 
 		// Escape all special characters in the search term.
 		str = str.replace( /[-\/\\^$*+?.()|[\]{}]/g, '\\$&' );
-		var regex = new RegExp( str, 'gi' );
-
+		var flags = this.isCaseSensitive ? 'g' : 'gi';
+		var regex = new RegExp( str, flags );
+console.debug(str, flags, regex);
 		for( var pageIndex in this.searchStructure ) {
 			var text = this.searchStructure[pageIndex];
 			var matches = regex.exec( text );
@@ -360,6 +368,15 @@ Einblick.Search = {
 
 		var si = document.getElementById( 'search-input' );
 		si.focus();
+	},
+
+
+	/**
+	 * Toggle case sensitivity.
+	 * @param {Event} ev
+	 */
+	toggleCaseSensitive: function( ev ) {
+		this.isCaseSensitive = !this.isCaseSensitive;
 	}
 
 
