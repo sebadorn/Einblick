@@ -51,6 +51,24 @@ Einblick.Search = {
 
 
 	/**
+	 * Do the search and related UI changes.
+	 * @param {String} value
+	 */
+	_doSearch: function( value ) {
+		Einblick.UI.closeAllOverlays();
+
+		var text = String( value ).trim();
+		var result = this.search( text );
+
+		this._lastSearchResult = result;
+		this._currentSelectedResult = null;
+
+		this._buildResultList();
+		this.jumpToNextResult();
+	},
+
+
+	/**
 	 * Get a ClientRect from the given text node and range positions.
 	 * @param  {Node}            textNode Target text node.
 	 * @param  {Number}          start    Range start position.
@@ -89,16 +107,7 @@ Einblick.Search = {
 			return;
 		}
 
-		Einblick.UI.closeAllOverlays();
-
-		var text = String( ev.target.value ).trim();
-		var result = this.search( text );
-
-		this._lastSearchResult = result;
-		this._currentSelectedResult = null;
-
-		this._buildResultList();
-		this.jumpToNextResult();
+		this._doSearch( ev.target.value );
 	},
 
 
@@ -239,9 +248,6 @@ Einblick.Search = {
 		var btnJumpPrev = document.getElementById( 'jump-prev-result' );
 		btnJumpPrev.addEventListener( 'click', this.jumpToPrevResult.bind( this ) );
 
-		var btnCase = document.getElementById( 'search-case-sensitive' );
-		btnCase.addEventListener( 'click', this.toggleCaseSensitive.bind( this ) );
-
 		var inputSearch = document.getElementById( 'search-input' );
 		inputSearch.addEventListener( 'keyup', this._handleSearch.bind( this ) );
 
@@ -253,6 +259,15 @@ Einblick.Search = {
 			Einblick.showPage( pageIndex, function() {
 				Einblick.UI.scrollToPage( pageIndex );
 			} );
+		} );
+
+		var btnCase = document.getElementById( 'search-case-sensitive' );
+		btnCase.addEventListener( 'click', function( ev ) {
+			Einblick.Search.toggleCaseSensitive();
+
+			if( inputSearch.value.length > 0 ) {
+				Einblick.Search._doSearch( inputSearch.value );
+			}
 		} );
 	},
 
@@ -340,7 +355,7 @@ Einblick.Search = {
 		str = str.replace( /[-\/\\^$*+?.()|[\]{}]/g, '\\$&' );
 		var flags = this.isCaseSensitive ? 'g' : 'gi';
 		var regex = new RegExp( str, flags );
-console.debug(str, flags, regex);
+
 		for( var pageIndex in this.searchStructure ) {
 			var text = this.searchStructure[pageIndex];
 			var matches = regex.exec( text );
@@ -373,10 +388,12 @@ console.debug(str, flags, regex);
 
 	/**
 	 * Toggle case sensitivity.
-	 * @param {Event} ev
 	 */
-	toggleCaseSensitive: function( ev ) {
+	toggleCaseSensitive: function() {
 		this.isCaseSensitive = !this.isCaseSensitive;
+
+		var btn = document.getElementById( 'search-case-sensitive' );
+		btn.className = this.isCaseSensitive ? 'active' : '';
 	}
 
 

@@ -200,11 +200,16 @@ span {
 		padding: 10px;
 	}
 
+		#searchbar button {
+			background-color: #2D2D2D;
+			padding: 6px 10px;
+		}
+
 		#searchbar .goto {
-			border: 1px solid rgba( 255, 255, 255, 0.1 );
 			border-radius: 4px;
 			display: flex;
 			margin-right: 10px;
+			overflow: hidden;
 		}
 
 			#searchbar .goto button {
@@ -221,7 +226,16 @@ span {
 		#search-input {
 			border-bottom: 1px solid rgba( 255, 255, 255, 0.1 );
 			box-sizing: border-box;
+			margin-right: 20px;
 			width: 200px;
+		}
+
+		#search-case-sensitive.active {
+			background-color: #3867A2;
+		}
+
+		#search-case-sensitive.active:hover {
+			color: #000000;
 		}
 
 
